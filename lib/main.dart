@@ -1,15 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
-Future<Map<String, dynamic>> loadStudentData() async {
-  final jsonString = await rootBundle.loadString(
-    'assets/data/student_data.json',
-  );
-
-  return jsonDecode(jsonString) as Map<String, dynamic>;
-}
+const String studentName = 'I Ketut Srijaya Sudarma';
+const String studentId = '2415051063';
 
 void main() {
   runApp(const MyApp());
@@ -22,329 +14,169 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Learning Dashboard',
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
-      home: const DashboardPage(),
+      title: 'Tahap 8 - Passing Data',
+      home: const CoursePage(),
     );
   }
 }
 
-// ===============================
-// DASHBOARD PAGE
-// ===============================
+// HALAMAN UTAMA
+class CoursePage extends StatelessWidget {
+  const CoursePage({super.key});
 
-class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
-
-  @override
-  State<DashboardPage> createState() => _DashboardPageState();
-}
-
-class _DashboardPageState extends State<DashboardPage> {
-  late Future<Map<String, dynamic>> studentFuture;
-
-  @override
-  void initState() {
-    super.initState();
-
-    studentFuture = loadStudentData();
-  }
+  final List<Map<String, dynamic>> courses = const [
+    {
+      'code': 'MOB01',
+      'title': 'Git & GitHub',
+      'credits': 2,
+      'status': 'done',
+    },
+    {
+      'code': 'MOB02',
+      'title': 'Dart Fundamentals',
+      'credits': 2,
+      'status': 'done',
+    },
+    {
+      'code': 'MOB03',
+      'title': 'Flutter UI Fundamentals',
+      'credits': 3,
+      'status': 'active',
+    },
+    {
+      'code': 'MOB04',
+      'title': 'Navigation',
+      'credits': 2,
+      'status': 'planned',
+    },
+    {
+      'code': 'MOB05',
+      'title': 'State Management',
+      'credits': 3,
+      'status': 'planned',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Learning Dashboard'),
+        title: const Text('Daftar Course'),
       ),
-
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: studentFuture,
-        builder: (context, snapshot) {
-          // LOADING
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          // ERROR
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Gagal memuat data:\n${snapshot.error}',
-                textAlign: TextAlign.center,
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              '$studentId - $studentName',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
-            );
-          }
-
-          // DATA KOSONG
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text('Data tidak tersedia'),
-            );
-          }
-
-          final data = snapshot.data!;
-
-          final student =
-              data['student'] as Map<String, dynamic>;
-
-          final courses =
-              data['courses'] as List<dynamic>;
-
-          final String name =
-              student['name'] as String;
-
-          final String nim =
-              student['nim'] as String;
-
-          // Menghitung ringkasan
-          final int totalCourses = courses.length;
-
-          final int completedCourses = courses
-              .where(
-                (course) =>
-                    course['status'] == 'done',
-              )
-              .length;
-
-          final int totalCredits = courses.fold(
-            0,
-            (total, course) =>
-                total +
-                (course['credits'] as int),
-          );
-
-          return SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // ===============================
-                // PROFILE
-                // ===============================
-
-                buildProfileCard(
-                  name,
-                  nim,
-                ),
-
-                const SizedBox(height: 16),
-
-                // ===============================
-                // SUMMARY
-                // ===============================
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: buildSummaryCard(
-                        icon: Icons.menu_book,
-                        title: 'Mata Kuliah',
-                        value: '$totalCourses',
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Expanded(
-                      child: buildSummaryCard(
-                        icon: Icons.school,
-                        title: 'Total SKS',
-                        value: '$totalCredits',
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // SUMMARY TAMBAHAN
-                buildSummaryCard(
-                  icon: Icons.check_circle,
-                  title: 'Materi Selesai',
-                  value:
-                      '$completedCourses dari $totalCourses',
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Daftar Materi',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // ===============================
-                // COURSE LIST
-                // ===============================
-
-                ...courses.map(
-                  (course) {
-                    final item =
-                        course as Map<String, dynamic>;
-
-                    return buildCourseCard(item);
-                  },
-                ),
-              ],
             ),
-          );
-        },
+          ),
+
+          Expanded(
+            child: ListView.builder(
+              itemCount: courses.length,
+              itemBuilder: (context, index) {
+                final course = courses[index];
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  child: ListTile(
+                    title: Text(course['title']),
+                    subtitle: Text(
+                      '${course['code']} • ${course['credits']} SKS',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CourseDetailPage(
+                            course: course,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ===============================
-// REUSABLE PROFILE WIDGET
-// ===============================
+// HALAMAN DETAIL
+class CourseDetailPage extends StatelessWidget {
+  final Map<String, dynamic> course;
 
-Widget buildProfileCard(
-  String name,
-  String nim,
-) {
-  return Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Image.asset(
-            'assets/images/image.png',
-            width: 80,
-            height: 80,
-            fit: BoxFit.cover,
-          ),
+  const CourseDetailPage({
+    super.key,
+    required this.course,
+  });
 
-          const SizedBox(width: 16),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(nim),
-
-                const SizedBox(height: 4),
-
-                const Text(
-                  'Mobile Programming Student',
-                ),
-              ],
-            ),
-          ),
-        ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detail Course'),
       ),
-    ),
-  );
-}
-
-// ===============================
-// REUSABLE SUMMARY WIDGET
-// ===============================
-
-Widget buildSummaryCard({
-  required IconData icon,
-  required String title,
-  required String value,
-}) {
-  return Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 32,
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(title),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(
+              child: Text(
+                '$studentId - $studentName',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
-// ===============================
-// REUSABLE COURSE CARD
-// ===============================
+            const SizedBox(height: 30),
 
-Widget buildCourseCard(
-  Map<String, dynamic> course,
-) {
-  final String status =
-      course['status'] as String;
+            Text(
+              course['title'],
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
-  IconData icon;
-  String statusText;
+            const SizedBox(height: 20),
 
-  if (status == 'done') {
-    icon = Icons.check_circle;
-    statusText = 'Selesai';
-  } else if (status == 'active') {
-    icon = Icons.play_circle;
-    statusText = 'Aktif';
-  } else {
-    icon = Icons.schedule;
-    statusText = 'Rencana';
-  }
+            Text('Kode Course : ${course['code']}'),
+            const SizedBox(height: 10),
 
-  return Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    child: ListTile(
-      leading: Icon(icon),
+            Text('SKS : ${course['credits']}'),
+            const SizedBox(height: 10),
 
-      title: Text(
-        course['title'] as String,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
+            Text('Status : ${course['status']}'),
+
+            const SizedBox(height: 30),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Kembali'),
+            ),
+          ],
         ),
       ),
-
-      subtitle: Text(
-        '${course['code']} • '
-        '${course['credits']} SKS\n'
-        '${course['category']}',
-      ),
-
-      isThreeLine: true,
-
-      trailing: Text(statusText),
-    ),
-  );
+    );
+  }
 }
