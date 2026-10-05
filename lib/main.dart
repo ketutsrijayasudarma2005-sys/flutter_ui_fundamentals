@@ -14,119 +14,40 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 11 - Adaptive Navigation',
-      home: const MainPage(),
+      title: 'Tahap 12 - User Interaction',
+      home: const InteractionPage(),
     );
   }
 }
 
-class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+class InteractionPage extends StatefulWidget {
+  const InteractionPage({super.key});
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<InteractionPage> createState() => _InteractionPageState();
 }
 
-class _MainPageState extends State<MainPage> {
-  int selectedIndex = 0;
+class _InteractionPageState extends State<InteractionPage> {
+  bool isFavorite = false;
+  int tapCount = 0;
 
-  final List<Widget> pages = const [
-    HomePage(),
-    CoursesPage(),
-    ProfilePage(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isExpanded = constraints.maxWidth >= 840;
-
-        return Scaffold(
-          body: Row(
-            children: [
-              if (isExpanded)
-                NavigationRail(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) {
-                    setState(() {
-                      selectedIndex = index;
-                    });
-                  },
-                  labelType: NavigationRailLabelType.all,
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.book_outlined),
-                      selectedIcon: Icon(Icons.book),
-                      label: Text('Courses'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.person_outline),
-                      selectedIcon: Icon(Icons.person),
-                      label: Text('Profile'),
-                    ),
-                  ],
-                ),
-
-              Expanded(
-                child: pages[selectedIndex],
-              ),
-            ],
-          ),
-
-          bottomNavigationBar: isExpanded
-              ? null
-              : NavigationBar(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) {
-                    setState(() {
-                      selectedIndex = index;
-                    });
-                  },
-                  destinations: const [
-                    NavigationDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home),
-                      label: 'Home',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.book_outlined),
-                      selectedIcon: Icon(Icons.book),
-                      label: 'Courses',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.person_outline),
-                      selectedIcon: Icon(Icons.person),
-                      label: 'Profile',
-                    ),
-                  ],
-                ),
-        );
-      },
-    );
+  void toggleFavorite() {
+    setState(() {
+      isFavorite = !isFavorite;
+    });
   }
-}
-
-// HOME
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: const Text('Tahap 12 - Interaction'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
+          children: [
+            const Text(
               '$studentId - $studentName',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -134,83 +55,102 @@ class HomePage extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
-            SizedBox(height: 20),
-            Icon(Icons.home, size: 80),
-            SizedBox(height: 16),
-            Text(
-              'Selamat Datang',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+
+            const SizedBox(height: 30),
+
+            // INKWELL
+            InkWell(
+              onTap: () {
+                setState(() {
+                  tapCount++;
+                });
+              },
+              onLongPress: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Course ditekan lama'),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.touch_app,
+                        size: 70,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Flutter UI Fundamentals',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Jumlah tap: $tapCount'),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
-// COURSES
-class CoursesPage extends StatelessWidget {
-  const CoursesPage({super.key});
+            const SizedBox(height: 20),
 
-  final List<String> courses = const [
-    'Git & GitHub',
-    'Dart Fundamentals',
-    'Flutter UI Fundamentals',
-    'Navigation',
-    'State Management',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Courses'),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: courses.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              leading: const Icon(Icons.book),
-              title: Text(courses[index]),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// PROFILE
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.account_circle, size: 100),
-            SizedBox(height: 20),
-            Text(
-              '$studentId - $studentName',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+            // GESTURE DETECTOR
+            GestureDetector(
+              onDoubleTap: () {
+                toggleFavorite();
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  border: Border.all(),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      size: 50,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isFavorite
+                          ? 'Course Favorit'
+                          : 'Belum Favorit',
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Double tap untuk mengubah favorit',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 10),
-            Text('PTI 5 A'),
+
+            const SizedBox(height: 20),
+
+            // BUTTON
+            ElevatedButton.icon(
+              onPressed: toggleFavorite,
+              icon: Icon(
+                isFavorite
+                    ? Icons.favorite
+                    : Icons.favorite_border,
+              ),
+              label: Text(
+                isFavorite
+                    ? 'Hapus dari Favorit'
+                    : 'Tambah ke Favorit',
+              ),
+            ),
           ],
         ),
       ),
