@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 10 - NavigationBar',
+      title: 'Tahap 11 - Adaptive Navigation',
       home: const MainPage(),
     );
   }
@@ -38,34 +38,76 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: pages[selectedIndex],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isExpanded = constraints.maxWidth >= 840;
 
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
+        return Scaffold(
+          body: Row(
+            children: [
+              if (isExpanded)
+                NavigationRail(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (index) {
+                    setState(() {
+                      selectedIndex = index;
+                    });
+                  },
+                  labelType: NavigationRailLabelType.all,
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: Text('Home'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.book_outlined),
+                      selectedIcon: Icon(Icons.book),
+                      label: Text('Courses'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.person_outline),
+                      selectedIcon: Icon(Icons.person),
+                      label: Text('Profile'),
+                    ),
+                  ],
+                ),
+
+              Expanded(
+                child: pages[selectedIndex],
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.book_outlined),
-            selectedIcon: Icon(Icons.book),
-            label: 'Courses',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+
+          bottomNavigationBar: isExpanded
+              ? null
+              : NavigationBar(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (index) {
+                    setState(() {
+                      selectedIndex = index;
+                    });
+                  },
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: 'Home',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.book_outlined),
+                      selectedIcon: Icon(Icons.book),
+                      label: 'Courses',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline),
+                      selectedIcon: Icon(Icons.person),
+                      label: 'Profile',
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 }
@@ -93,10 +135,7 @@ class HomePage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-            Icon(
-              Icons.home,
-              size: 80,
-            ),
+            Icon(Icons.home, size: 80),
             SizedBox(height: 16),
             Text(
               'Selamat Datang',
@@ -160,10 +199,7 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Icon(
-              Icons.account_circle,
-              size: 100,
-            ),
+            Icon(Icons.account_circle, size: 100),
             SizedBox(height: 20),
             Text(
               '$studentId - $studentName',
