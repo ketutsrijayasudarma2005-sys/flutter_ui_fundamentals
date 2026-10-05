@@ -14,111 +14,55 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 9 - Return Result',
-      home: const CoursePage(),
+      title: 'Tahap 10 - NavigationBar',
+      home: const MainPage(),
     );
   }
 }
 
-class CoursePage extends StatelessWidget {
-  const CoursePage({super.key});
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
 
-  final List<Map<String, dynamic>> courses = const [
-    {
-      'code': 'MOB01',
-      'title': 'Git & GitHub',
-      'credits': 2,
-      'status': 'done',
-    },
-    {
-      'code': 'MOB02',
-      'title': 'Dart Fundamentals',
-      'credits': 2,
-      'status': 'done',
-    },
-    {
-      'code': 'MOB03',
-      'title': 'Flutter UI Fundamentals',
-      'credits': 3,
-      'status': 'active',
-    },
-    {
-      'code': 'MOB04',
-      'title': 'Navigation',
-      'credits': 2,
-      'status': 'planned',
-    },
-    {
-      'code': 'MOB05',
-      'title': 'State Management',
-      'credits': 3,
-      'status': 'planned',
-    },
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  int selectedIndex = 0;
+
+  final List<Widget> pages = const [
+    HomePage(),
+    CoursesPage(),
+    ProfilePage(),
   ];
-
-  Future<void> openDetail(
-    BuildContext context,
-    Map<String, dynamic> course,
-  ) async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CourseDetailPage(course: course),
-      ),
-    );
-
-    if (result == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course berhasil ditambahkan ke favorit'),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daftar Course'),
-      ),
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              '$studentId - $studentName',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: courses.length,
-              itemBuilder: (context, index) {
-                final course = courses[index];
+      body: pages[selectedIndex],
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: ListTile(
-                    title: Text(course['title']),
-                    subtitle: Text(
-                      '${course['code']} • ${course['credits']} SKS',
-                    ),
-                    trailing: const Icon(Icons.arrow_forward),
-                    onTap: () {
-                      openDetail(context, course);
-                    },
-                  ),
-                );
-              },
-            ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.book_outlined),
+            selectedIcon: Icon(Icons.book),
+            label: 'Courses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
@@ -126,65 +70,111 @@ class CoursePage extends StatelessWidget {
   }
 }
 
-class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
-
-  const CourseDetailPage({
-    super.key,
-    required this.course,
-  });
+// HOME
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Course'),
+        title: const Text('Home'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                '$studentId - $studentName',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text(
+              '$studentId - $studentName',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
-
-            const SizedBox(height: 30),
-
+            SizedBox(height: 20),
+            Icon(
+              Icons.home,
+              size: 80,
+            ),
+            SizedBox(height: 16),
             Text(
-              course['title'],
-              style: const TextStyle(
+              'Selamat Datang',
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-            const SizedBox(height: 20),
+// COURSES
+class CoursesPage extends StatelessWidget {
+  const CoursesPage({super.key});
 
-            Text('Kode Course : ${course['code']}'),
-            const SizedBox(height: 10),
+  final List<String> courses = const [
+    'Git & GitHub',
+    'Dart Fundamentals',
+    'Flutter UI Fundamentals',
+    'Navigation',
+    'State Management',
+  ];
 
-            Text('SKS : ${course['credits']}'),
-            const SizedBox(height: 10),
-
-            Text('Status : ${course['status']}'),
-
-            const SizedBox(height: 30),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              icon: const Icon(Icons.favorite),
-              label: const Text('Tambah ke Favorit'),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Courses'),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: courses.length,
+        itemBuilder: (context, index) {
+          return Card(
+            child: ListTile(
+              leading: const Icon(Icons.book),
+              title: Text(courses[index]),
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// PROFILE
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(
+              Icons.account_circle,
+              size: 100,
+            ),
+            SizedBox(height: 20),
+            Text(
+              '$studentId - $studentName',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text('PTI 5 A'),
           ],
         ),
       ),
