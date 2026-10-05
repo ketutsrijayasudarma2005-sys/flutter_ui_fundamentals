@@ -14,144 +14,140 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 12 - User Interaction',
-      home: const InteractionPage(),
+      title: 'Tahap 13 - Form',
+      home: const FeedbackPage(),
     );
   }
 }
 
-class InteractionPage extends StatefulWidget {
-  const InteractionPage({super.key});
+class FeedbackPage extends StatefulWidget {
+  const FeedbackPage({super.key});
 
   @override
-  State<InteractionPage> createState() => _InteractionPageState();
+  State<FeedbackPage> createState() => _FeedbackPageState();
 }
 
-class _InteractionPageState extends State<InteractionPage> {
-  bool isFavorite = false;
-  int tapCount = 0;
+class _FeedbackPageState extends State<FeedbackPage> {
+  final _formKey = GlobalKey<FormState>();
 
-  void toggleFavorite() {
-    setState(() {
-      isFavorite = !isFavorite;
-    });
+  final nameController = TextEditingController();
+  final nimController = TextEditingController();
+  final commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    nimController.dispose();
+    commentController.dispose();
+    super.dispose();
+  }
+
+  void submitForm() {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Form berhasil divalidasi'),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tahap 12 - Interaction'),
+        title: const Text('Tahap 13 - Form'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Text(
-              '$studentId - $studentName',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // INKWELL
-            InkWell(
-              onTap: () {
-                setState(() {
-                  tapCount++;
-                });
-              },
-              onLongPress: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Course ditekan lama'),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.touch_app,
-                        size: 70,
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Flutter UI Fundamentals',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Jumlah tap: $tapCount'),
-                    ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Text(
+                  '$studentId - $studentName',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
-            // GESTURE DETECTOR
-            GestureDetector(
-              onDoubleTap: () {
-                toggleFavorite();
-              },
-              child: Container(
+              const Text(
+                'Form Feedback',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Nama wajib diisi';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: nimController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'NIM',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'NIM wajib diisi';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: commentController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  labelText: 'Komentar',
+                  hintText: 'Minimal 5 karakter',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.length < 5) {
+                    return 'Komentar minimal 5 karakter';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              SizedBox(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  border: Border.all(),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      isFavorite
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      size: 50,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isFavorite
-                          ? 'Course Favorit'
-                          : 'Belum Favorit',
-                    ),
-                    const SizedBox(height: 5),
-                    const Text(
-                      'Double tap untuk mengubah favorit',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: ElevatedButton(
+                  onPressed: submitForm,
+                  child: const Text('Kirim'),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // BUTTON
-            ElevatedButton.icon(
-              onPressed: toggleFavorite,
-              icon: Icon(
-                isFavorite
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-              ),
-              label: Text(
-                isFavorite
-                    ? 'Hapus dari Favorit'
-                    : 'Tambah ke Favorit',
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
