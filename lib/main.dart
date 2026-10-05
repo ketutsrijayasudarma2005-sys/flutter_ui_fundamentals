@@ -14,13 +14,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 8 - Passing Data',
+      title: 'Tahap 9 - Return Result',
       home: const CoursePage(),
     );
   }
 }
 
-// HALAMAN UTAMA
 class CoursePage extends StatelessWidget {
   const CoursePage({super.key});
 
@@ -57,6 +56,26 @@ class CoursePage extends StatelessWidget {
     },
   ];
 
+  Future<void> openDetail(
+    BuildContext context,
+    Map<String, dynamic> course,
+  ) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CourseDetailPage(course: course),
+      ),
+    );
+
+    if (result == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Course berhasil ditambahkan ke favorit'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +95,6 @@ class CoursePage extends StatelessWidget {
               ),
             ),
           ),
-
           Expanded(
             child: ListView.builder(
               itemCount: courses.length,
@@ -95,14 +113,7 @@ class CoursePage extends StatelessWidget {
                     ),
                     trailing: const Icon(Icons.arrow_forward),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CourseDetailPage(
-                            course: course,
-                          ),
-                        ),
-                      );
+                      openDetail(context, course);
                     },
                   ),
                 );
@@ -115,7 +126,6 @@ class CoursePage extends StatelessWidget {
   }
 }
 
-// HALAMAN DETAIL
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
 
@@ -168,11 +178,12 @@ class CourseDetailPage extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context, true);
               },
-              child: const Text('Kembali'),
+              icon: const Icon(Icons.favorite),
+              label: const Text('Tambah ke Favorit'),
             ),
           ],
         ),
