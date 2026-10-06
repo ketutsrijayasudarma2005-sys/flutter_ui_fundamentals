@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 const String studentName = 'I Ketut Srijaya Sudarma';
 const String studentId = '2415051063';
 
+const Color primaryBlue = Color(0xFF1976D2);
+const Color darkBlue = Color(0xFF173B63);
+const Color backgroundColor = Color(0xFFF1F6FA);
+const Color cardColor = Color(0xFFF9FCFF);
+const Color navigationColor = Color(0xFFE4F1FC);
+const Color borderColor = Color(0xFFC3D8E9);
+const Color greenColor = Color(0xFF008F78);
+
 void main() {
   runApp(const MyApp());
 }
@@ -14,19 +22,31 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer',
+      title: 'Course Explorer v2',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        scaffoldBackgroundColor: backgroundColor,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: primaryBlue,
+          primary: primaryBlue,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: primaryBlue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       home: const MainPage(),
     );
   }
 }
 
-// ===============================
 // DATA COURSE
-// ===============================
 
 const List<Map<String, dynamic>> courses = [
   {
@@ -66,9 +86,7 @@ const List<Map<String, dynamic>> courses = [
   },
 ];
 
-// ===============================
-// MAIN PAGE + NAVIGATION
-// ===============================
+// MAIN PAGE
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -80,277 +98,443 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
 
-  final List<Widget> pages = const [
-    HomePage(),
-    CoursesPage(),
-    ProfilePage(),
-  ];
+  // Favorite disimpan terpusat agar bisa digunakan bersama.
+  final Set<String> favoriteCodes = {'MOB01', 'MOB02'};
+
+  void toggleFavorite(String code) {
+    setState(() {
+      if (favoriteCodes.contains(code)) {
+        favoriteCodes.remove(code);
+      } else {
+        favoriteCodes.add(code);
+      }
+    });
+  }
+
+  void openDetail(Map<String, dynamic> course) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailPage(
+          course: course,
+          isFavorite: favoriteCodes.contains(course['code']),
+          onFavoriteTap: () => toggleFavorite(course['code']),
+        ),
+      ),
+    );
+  }
+
+  Future<void> openProfile() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfilePage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isExpanded = MediaQuery.sizeOf(context).width >= 840;
+
+    final pages = [
+      HomePage(
+        favoriteCount: favoriteCodes.length,
+        favoriteCodes: favoriteCodes,
+        onCourseTap: openDetail,
+        onFavoriteTap: toggleFavorite,
+      ),
+      CoursesPage(
+        favoriteCodes: favoriteCodes,
+        onCourseTap: openDetail,
+        onFavoriteTap: toggleFavorite,
+      ),
+      FavoritesPage(
+        favoriteCodes: favoriteCodes,
+        onCourseTap: openDetail,
+        onFavoriteTap: toggleFavorite,
+      ),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Course Explorer v2'),
+        actions: [
+          IconButton(
+            tooltip: 'Profile',
+            onPressed: openProfile,
+            icon: const Icon(Icons.person_outline),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDF4FA),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  '$studentId • $studentName',
+                  style: TextStyle(
+                    color: darkBlue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Row(
+                children: [
+                  if (isExpanded)
+                    NavigationRail(
+                      backgroundColor: navigationColor,
+                      selectedIndex: selectedIndex,
+                      labelType: NavigationRailLabelType.all,
+                      onDestinationSelected: (index) {
+                        setState(() {
+                          selectedIndex = index;
+                        });
+                      },
+                      destinations: const [
+                        NavigationRailDestination(
+                          icon: Icon(Icons.home_outlined),
+                          selectedIcon: Icon(Icons.home),
+                          label: Text('Home'),
+                        ),
+                        NavigationRailDestination(
+                          icon: Icon(Icons.book_outlined),
+                          selectedIcon: Icon(Icons.book),
+                          label: Text('Courses'),
+                        ),
+                        NavigationRailDestination(
+                          icon: Icon(Icons.favorite_border),
+                          selectedIcon: Icon(Icons.favorite),
+                          label: Text('Favorites'),
+                        ),
+                      ],
+                    ),
+                  Expanded(
+                    child: IndexedStack(index: selectedIndex, children: pages),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: isExpanded
+          ? null
+          : NavigationBar(
+              backgroundColor: navigationColor,
+              indicatorColor: const Color(0xFFC7E2FA),
+              selectedIndex: selectedIndex,
+              labelTextStyle: WidgetStateProperty.all(
+                const TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+              ),
+              onDestinationSelected: (index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined, color: darkBlue),
+                  selectedIcon: Icon(Icons.home, color: darkBlue),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.book_outlined, color: darkBlue),
+                  selectedIcon: Icon(Icons.book, color: darkBlue),
+                  label: 'Courses',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.favorite_border, color: darkBlue),
+                  selectedIcon: Icon(Icons.favorite, color: darkBlue),
+                  label: 'Favorites',
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+// HOME PAGE
+
+class HomePage extends StatelessWidget {
+  final int favoriteCount;
+  final Set<String> favoriteCodes;
+  final ValueChanged<Map<String, dynamic>> onCourseTap;
+  final ValueChanged<String> onFavoriteTap;
+
+  const HomePage({
+    super.key,
+    required this.favoriteCount,
+    required this.favoriteCodes,
+    required this.onCourseTap,
+    required this.onFavoriteTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: SummaryCard(title: 'Courses', value: '${courses.length}'),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SummaryCard(title: 'Favorites', value: '$favoriteCount'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        ...courses
+            .take(3)
+            .map(
+              (course) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: CourseCard(
+                  course: course,
+                  isFavorite: favoriteCodes.contains(course['code']),
+                  onTap: () => onCourseTap(course),
+                  onFavoriteTap: () => onFavoriteTap(course['code']),
+                  compact: true,
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+// SUMMARY CARD
+
+class SummaryCard extends StatelessWidget {
+  final String title;
+  final String value;
+
+  const SummaryCard({super.key, required this.title, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF5FC),
+        border: Border.all(color: const Color(0xFFAED3E9)),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(color: Color(0xFF536D87), fontSize: 14),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: darkBlue,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// COURSES PAGE
+
+class CoursesPage extends StatelessWidget {
+  final Set<String> favoriteCodes;
+  final ValueChanged<Map<String, dynamic>> onCourseTap;
+  final ValueChanged<String> onFavoriteTap;
+
+  const CoursesPage({
+    super.key,
+    required this.favoriteCodes,
+    required this.onCourseTap,
+    required this.onFavoriteTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isExpanded = constraints.maxWidth >= 840;
+        final columns = constraints.maxWidth >= 900
+            ? 3
+            : constraints.maxWidth >= 600
+            ? 2
+            : 1;
 
-        return Scaffold(
-          body: Row(
-            children: [
-              if (isExpanded)
-                NavigationRail(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) {
-                    setState(() {
-                      selectedIndex = index;
-                    });
-                  },
-                  labelType: NavigationRailLabelType.all,
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.book_outlined),
-                      selectedIcon: Icon(Icons.book),
-                      label: Text('Courses'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.person_outline),
-                      selectedIcon: Icon(Icons.person),
-                      label: Text('Profile'),
-                    ),
-                  ],
-                ),
-
-              Expanded(
-                child: pages[selectedIndex],
-              ),
-            ],
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: courses.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 155,
           ),
+          itemBuilder: (context, index) {
+            final course = courses[index];
 
-          bottomNavigationBar: isExpanded
-              ? null
-              : NavigationBar(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) {
-                    setState(() {
-                      selectedIndex = index;
-                    });
-                  },
-                  destinations: const [
-                    NavigationDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home),
-                      label: 'Home',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.book_outlined),
-                      selectedIcon: Icon(Icons.book),
-                      label: 'Courses',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.person_outline),
-                      selectedIcon: Icon(Icons.person),
-                      label: 'Profile',
-                    ),
-                  ],
-                ),
+            return CourseCard(
+              course: course,
+              isFavorite: favoriteCodes.contains(course['code']),
+              onTap: () => onCourseTap(course),
+              onFavoriteTap: () => onFavoriteTap(course['code']),
+            );
+          },
         );
       },
     );
   }
 }
 
-// ===============================
-// HOME
-// ===============================
+// FAVORITES PAGE
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class FavoritesPage extends StatelessWidget {
+  final Set<String> favoriteCodes;
+  final ValueChanged<Map<String, dynamic>> onCourseTap;
+  final ValueChanged<String> onFavoriteTap;
+
+  const FavoritesPage({
+    super.key,
+    required this.favoriteCodes,
+    required this.onCourseTap,
+    required this.onFavoriteTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Course Explorer'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(
-                Icons.school,
-                size: 90,
-              ),
-              SizedBox(height: 20),
-              Text(
-                '$studentId - $studentName',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Course Explorer',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Jelajahi daftar course yang tersedia.',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+    final favoriteCourses = courses
+        .where((course) => favoriteCodes.contains(course['code']))
+        .toList();
+
+    if (favoriteCourses.isEmpty) {
+      return const Center(
+        child: Text(
+          'Belum ada course favorit.',
+          style: TextStyle(color: darkBlue, fontSize: 16),
         ),
-      ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: favoriteCourses.length,
+      itemBuilder: (context, index) {
+        final course = favoriteCourses[index];
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: CourseCard(
+            course: course,
+            isFavorite: true,
+            onTap: () => onCourseTap(course),
+            onFavoriteTap: () => onFavoriteTap(course['code']),
+            compact: true,
+          ),
+        );
+      },
     );
   }
 }
 
-// ===============================
-// COURSES
-// ===============================
-
-class CoursesPage extends StatelessWidget {
-  const CoursesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Courses'),
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          int columns;
-
-          if (constraints.maxWidth < 600) {
-            columns = 1;
-          } else if (constraints.maxWidth < 900) {
-            columns = 2;
-          } else {
-            columns = 3;
-          }
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
-            itemCount: courses.length,
-            itemBuilder: (context, index) {
-              return CourseCard(
-                course: courses[index],
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ===============================
 // COURSE CARD
-// ===============================
 
-class CourseCard extends StatefulWidget {
+class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
+  final bool isFavorite;
+  final VoidCallback onTap;
+  final VoidCallback onFavoriteTap;
+  final bool compact;
 
   const CourseCard({
     super.key,
     required this.course,
+    required this.isFavorite,
+    required this.onTap,
+    required this.onFavoriteTap,
+    this.compact = false,
   });
 
   @override
-  State<CourseCard> createState() => _CourseCardState();
-}
-
-class _CourseCardState extends State<CourseCard> {
-  bool isFavorite = false;
-
-  @override
   Widget build(BuildContext context) {
-    final course = widget.course;
-
     return Card(
-      child: InkWell(
+      margin: EdgeInsets.zero,
+      color: cardColor,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CourseDetailPage(
-                course: course,
-              ),
-            ),
-          );
-        },
+        side: const BorderSide(color: borderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          child: Row(
             children: [
-              Text(
-                course['code'],
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                course['title'],
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text('${course['credits']} SKS'),
-
-              const SizedBox(height: 8),
-
-              Chip(
-                label: Text(course['status']),
-              ),
-
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    isFavorite = !isFavorite;
-                  });
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isFavorite
-                            ? 'Ditambahkan ke favorit'
-                            : 'Dihapus dari favorit',
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course['title'] as String,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: darkBlue,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 7),
+                    Text(
+                      course['status'] as String,
+                      style: const TextStyle(
+                        color: greenColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (!compact) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        '${course['code']} • ${course['credits']} SKS',
+                        style: const TextStyle(
+                          color: Color(0xFF536D87),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: isFavorite
+                    ? 'Hapus dari favorit'
+                    : 'Tambah ke favorit',
+                onPressed: onFavoriteTap,
                 icon: Icon(
-                  isFavorite
-                      ? Icons.favorite
-                      : Icons.favorite_border,
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? greenColor : darkBlue,
                 ),
               ),
             ],
@@ -361,81 +545,95 @@ class _CourseCardState extends State<CourseCard> {
   }
 }
 
-// ===============================
-// COURSE DETAIL
-// ===============================
+// COURSE DETAIL PAGE
 
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
+  final bool isFavorite;
+  final VoidCallback onFavoriteTap;
 
   const CourseDetailPage({
     super.key,
     required this.course,
+    required this.isFavorite,
+    required this.onFavoriteTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Course Detail'),
-      ),
-      body: SingleChildScrollView(
+      appBar: AppBar(title: const Text('Course Detail')),
+      body: ListView(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                '$studentId - $studentName',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+        children: [
+          const Text(
+            '$studentId • $studentName',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 30),
+          Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course['title'] as String,
+                  style: const TextStyle(
+                    color: darkBlue,
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                Text('Kode: ${course['code']}'),
+                const SizedBox(height: 10),
+                Text('SKS: ${course['credits']}'),
+                const SizedBox(height: 10),
+                Text('Status: ${course['status']}'),
+                const SizedBox(height: 10),
+                Text('Kategori: ${course['category']}'),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      onFavoriteTap();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isFavorite
+                                ? 'Course dihapus dari favorit'
+                                : 'Course ditambahkan ke favorit',
+                          ),
+                        ),
+                      );
+                    },
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                    ),
+                    label: Text(
+                      isFavorite
+                          ? 'Hapus dari Favorites'
+                          : 'Tambah ke Favorites',
+                    ),
+                  ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 30),
-
-            Text(
-              course['title'],
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Text('Kode: ${course['code']}'),
-            const SizedBox(height: 10),
-
-            Text('SKS: ${course['credits']}'),
-            const SizedBox(height: 10),
-
-            Text('Status: ${course['status']}'),
-            const SizedBox(height: 10),
-
-            Text('Kategori: ${course['category']}'),
-
-            const SizedBox(height: 30),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Kembali'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ===============================
 // PROFILE + FORM
-// ===============================
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -461,18 +659,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void submitFeedback() {
     if (formKey.currentState!.validate()) {
-      showDialog(
+      showDialog<void>(
         context: context,
-        builder: (context) {
+        builder: (dialogContext) {
           return AlertDialog(
             title: const Text('Berhasil'),
-            content: const Text(
-              'Feedback berhasil dikirim.',
-            ),
+            content: const Text('Feedback berhasil dikirim.'),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                 },
                 child: const Text('OK'),
               ),
@@ -486,92 +682,86 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
-      body: SingleChildScrollView(
+      appBar: AppBar(title: const Text('Profile')),
+      body: ListView(
         padding: const EdgeInsets.all(20),
-        child: Form(
-          key: formKey,
-          child: Column(
-            children: [
-              const Icon(
-                Icons.account_circle,
-                size: 100,
-              ),
-
-              const SizedBox(height: 10),
-
-              const Text(
-                '$studentId - $studentName',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Nama wajib diisi';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: nimController,
-                decoration: const InputDecoration(
-                  labelText: 'NIM',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'NIM wajib diisi';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: commentController,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Komentar',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.length < 5) {
-                    return 'Komentar minimal 5 karakter';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: submitFeedback,
-                  child: const Text('Kirim Feedback'),
-                ),
-              ),
-            ],
+        children: [
+          const Icon(Icons.account_circle, size: 100, color: primaryBlue),
+          const SizedBox(height: 10),
+          const Text(
+            '$studentId - $studentName',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: darkBlue,
+              fontWeight: FontWeight.bold,
+              fontSize: 17,
+            ),
           ),
-        ),
+          const SizedBox(height: 30),
+          Form(
+            key: formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: cardColor,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Nama wajib diisi';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: nimController,
+                  decoration: const InputDecoration(
+                    labelText: 'NIM',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: cardColor,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'NIM wajib diisi';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: commentController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Komentar',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: cardColor,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().length < 5) {
+                      return 'Komentar minimal 5 karakter';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: submitFeedback,
+                    child: const Text('Kirim Feedback'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
