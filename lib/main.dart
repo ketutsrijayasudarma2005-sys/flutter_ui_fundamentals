@@ -156,7 +156,7 @@ class _MainPageState extends State<MainPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Explorer v2'),
+        title: const Text('Course Explorer '),
         actions: [
           IconButton(
             tooltip: 'Profile',
