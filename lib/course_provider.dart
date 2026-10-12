@@ -1,1 +1,1 @@
-export 'course_state.dart';
+export 'providers/course_provider.dart';
