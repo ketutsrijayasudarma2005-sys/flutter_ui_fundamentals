@@ -97,6 +97,15 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    // 41. Uji service melalui Provider atau debugPrint sementara
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CourseState>().loadCourses();
+    });
+  }
+
   void openDetail(Course course) {
     Navigator.push(
       context,
@@ -472,8 +481,10 @@ class CoursesPage extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    // Mengubah data JSON menjadi List<Course> menggunakan Course.fromJson
-    final courseModels = courses.map((json) => Course.fromJson(json)).toList();
+    final courseState = context.watch<CourseState>();
+    final courseModels = courseState.courses.isNotEmpty
+        ? courseState.courses
+        : courses.map((json) => Course.fromJson(json)).toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -513,7 +524,9 @@ class FavoritesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final courseState = context.watch<CourseState>();
-    final courseModels = courses.map((json) => Course.fromJson(json)).toList();
+    final courseModels = courseState.courses.isNotEmpty
+        ? courseState.courses
+        : courses.map((json) => Course.fromJson(json)).toList();
     final favoriteCourses = courseModels
         .where((course) => courseState.isFavorite(course.code))
         .toList();
