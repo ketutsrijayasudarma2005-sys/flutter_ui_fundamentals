@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_state.dart';
-
-
+import 'models/course.dart';
 const String studentName = 'I Ketut Srijaya Sudarma';
 const String studentId = '2415051063';
 const Color primaryBlue = Color(0xFF1976D2);
@@ -98,7 +97,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
 
-  void openDetail(Map<String, dynamic> course) {
+  void openDetail(Course course) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -236,11 +235,12 @@ class _MainPageState extends State<MainPage> {
 
 // HOME PAGE
 class HomePage extends StatelessWidget {
-  final ValueChanged<Map<String, dynamic>> onCourseTap;
+  final ValueChanged<Course> onCourseTap;
   const HomePage({
     super.key,
     required this.onCourseTap,
   });
+
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +275,7 @@ class HomePage extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'Aplikasi untuk melihat daftar course dan informasi pembelajaran.',
+                'E-LEARNING.',
                 style: TextStyle(
                   fontSize: 12.5,
                   color: Color(0xFF64748B),
@@ -369,6 +369,17 @@ class HomePage extends StatelessWidget {
                           const Divider(height: 20),
                           Text('Nama: $studentName'),
                           Text('NIM: $studentId'),
+                          const SizedBox(height: 8),
+                          Builder(
+                            builder: (context) {
+                              // Tahap 8: Mengubah satu data JSON menjadi object Course
+                              final sampleCourse = Course.fromJson(courses.first);
+                              return Text(
+                                'Sample Model: ${sampleCourse.title} (${sampleCourse.code})',
+                                style: const TextStyle(fontWeight: FontWeight.w500),
+                              );
+                            },
+                          ),
                           Consumer<CourseState>(
                             builder: (context, state, _) {
                               return Padding(
@@ -454,13 +465,16 @@ class SummaryCard extends StatelessWidget {
 }
 // COURSES PAGE
 class CoursesPage extends StatelessWidget {
-  final ValueChanged<Map<String, dynamic>> onCourseTap;
+  final ValueChanged<Course> onCourseTap;
   const CoursesPage({
     super.key,
     required this.onCourseTap,
   });
   @override
   Widget build(BuildContext context) {
+    // Mengubah data JSON menjadi List<Course> menggunakan Course.fromJson
+    final courseModels = courses.map((json) => Course.fromJson(json)).toList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 900
@@ -470,7 +484,7 @@ class CoursesPage extends StatelessWidget {
             : 1;
         return GridView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: courses.length,
+          itemCount: courseModels.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
             crossAxisSpacing: 12,
@@ -478,7 +492,7 @@ class CoursesPage extends StatelessWidget {
             mainAxisExtent: 155,
           ),
           itemBuilder: (context, index) {
-            final course = courses[index];
+            final course = courseModels[index];
             return CourseCard(
               course: course,
               onTap: () => onCourseTap(course),
@@ -491,7 +505,7 @@ class CoursesPage extends StatelessWidget {
 }
 // FAVORITES PAGE
 class FavoritesPage extends StatelessWidget {
-  final ValueChanged<Map<String, dynamic>> onCourseTap;
+  final ValueChanged<Course> onCourseTap;
   const FavoritesPage({
     super.key,
     required this.onCourseTap,
@@ -499,8 +513,9 @@ class FavoritesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final courseState = context.watch<CourseState>();
-    final favoriteCourses = courses
-        .where((course) => courseState.isFavorite(course['code'] as String))
+    final courseModels = courses.map((json) => Course.fromJson(json)).toList();
+    final favoriteCourses = courseModels
+        .where((course) => courseState.isFavorite(course.code))
         .toList();
     if (favoriteCourses.isEmpty) {
       return const Center(
@@ -529,7 +544,7 @@ class FavoritesPage extends StatelessWidget {
 }
 // COURSE CARD
 class CourseCard extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   final VoidCallback onTap;
   final bool compact;
   const CourseCard({
@@ -540,7 +555,7 @@ class CourseCard extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final courseCode = course['code'] as String;
+    final courseCode = course.code;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -563,7 +578,7 @@ class CourseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      course['title'] as String,
+                      course.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -574,7 +589,7 @@ class CourseCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 7),
                     Text(
-                      course['status'] as String,
+                      course.status,
                       style: const TextStyle(
                         color: greenColor,
                         fontWeight: FontWeight.bold,
@@ -583,7 +598,7 @@ class CourseCard extends StatelessWidget {
                     if (!compact) ...[
                       const SizedBox(height: 5),
                       Text(
-                        '${course['code']} • ${course['credits']} SKS',
+                        '${course.code} • ${course.credits} SKS',
                         style: const TextStyle(
                           color: Color(0xFF536D87),
                           fontSize: 12,
@@ -621,14 +636,14 @@ class CourseCard extends StatelessWidget {
 }
 // COURSE DETAIL PAGE
 class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final Course course;
   const CourseDetailPage({
     super.key,
     required this.course,
   });
   @override
   Widget build(BuildContext context) {
-    final courseCode = course['code'] as String;
+    final courseCode = course.code;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Course Detail')),
@@ -652,7 +667,7 @@ class CourseDetailPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  course['title'] as String,
+                  course.title,
                   style: const TextStyle(
                     color: darkBlue,
                     fontSize: 25,
@@ -660,13 +675,13 @@ class CourseDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text('Kode: ${course['code']}'),
+                Text('Kode: ${course.code}'),
                 const SizedBox(height: 10),
-                Text('SKS: ${course['credits']}'),
+                Text('SKS: ${course.credits}'),
                 const SizedBox(height: 10),
-                Text('Status: ${course['status']}'),
+                Text('Status: ${course.status}'),
                 const SizedBox(height: 10),
-                Text('Kategori: ${course['category']}'),
+                Text('Kategori: ${course.category}'),
                 const SizedBox(height: 20),
                 // 32. Gunakan Consumer pada satu bagian kecil UI
                 Consumer<CourseState>(
