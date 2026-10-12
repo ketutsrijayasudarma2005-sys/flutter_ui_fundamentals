@@ -4,16 +4,15 @@ import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
 class CourseState extends ChangeNotifier {
-  final CourseRepository _repository;
+  final CourseRepository repository;
+
+  CourseState([CourseRepository? repository])
+      : repository = repository ?? CourseRepository(CourseService());
+
+  List<Course> courses = [];
+  bool isLoading = false;
+  String? error;
   final Set<String> favorites = {};
-  List<Course> _courses = [];
-  bool _isLoading = false;
-
-  CourseState({CourseRepository? repository})
-      : _repository = repository ?? CourseRepository(CourseService());
-
-  List<Course> get courses => _courses;
-  bool get isLoading => _isLoading;
 
   bool isFavorite(String id) {
     return favorites.contains(id);
@@ -28,21 +27,22 @@ class CourseState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 45. Provider memanggil repository.getCourses()
-  Future<List<Course>> loadCourses() async {
-    _isLoading = true;
+  // 47. Implementasikan loadCourses()
+  Future<void> loadCourses() async {
+    isLoading = true;
+    error = null;
     notifyListeners();
     try {
-      _courses = await _repository.getCourses();
-      debugPrint('CourseRepository: Berhasil memuat ${_courses.length} course.');
-      return _courses;
+      courses = await repository.getCourses();
     } catch (e) {
-      debugPrint('CourseRepository Error: $e');
-      return [];
+      error = e.toString();
     } finally {
-      _isLoading = false;
+      isLoading = false;
       notifyListeners();
     }
   }
 }
+
+typedef CourseProvider = CourseState;
+
 
