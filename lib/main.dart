@@ -37,12 +37,12 @@ class MyApp extends StatelessWidget {
           primary: primaryBlue,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: primaryBlue,
-          foregroundColor: Colors.white,
+          backgroundColor: backgroundColor,
+          foregroundColor: darkBlue,
           elevation: 0,
           titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
+            color: darkBlue,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -97,140 +97,103 @@ class MainPage extends StatefulWidget {
 }
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
-  // Favorite disimpan terpusat agar bisa digunakan bersama.
-  final Set<String> favoriteCodes = {'MOB01', 'MOB02'};
-  void toggleFavorite(String code) {
-    setState(() {
-      if (favoriteCodes.contains(code)) {
-        favoriteCodes.remove(code);
-      } else {
-        favoriteCodes.add(code);
-      }
-    });
-  }
+
   void openDetail(Map<String, dynamic> course) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CourseDetailPage(
-          course: course,
-          isFavorite: favoriteCodes.contains(course['code']),
-          onFavoriteTap: () => toggleFavorite(course['code']),
-        ),
+        builder: (_) => CourseDetailPage(course: course),
       ),
     );
   }
+
   Future<void> openProfile() async {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ProfilePage()),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final isExpanded = MediaQuery.sizeOf(context).width >= 840;
     final pages = [
-      HomePage(
-        favoriteCount: favoriteCodes.length,
-        favoriteCodes: favoriteCodes,
-        onCourseTap: openDetail,
-        onFavoriteTap: toggleFavorite,
-      ),
-      CoursesPage(
-        favoriteCodes: favoriteCodes,
-        onCourseTap: openDetail,
-        onFavoriteTap: toggleFavorite,
-      ),
-      FavoritesPage(
-        favoriteCodes: favoriteCodes,
-        onCourseTap: openDetail,
-        onFavoriteTap: toggleFavorite,
-      ),
+      HomePage(onCourseTap: openDetail),
+      CoursesPage(onCourseTap: openDetail),
+      const ProfilePage(),
     ];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Explorer '),
-      actions: [
-  IconButton(
-    tooltip: 'Eksperimen ValueNotifier',
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const ValueNotifierExperimentPage(),
-        ),
-      );
-    },
-    icon: const Icon(Icons.exposure_plus_1),
-  ),
-  IconButton(
-    tooltip: 'Profile',
-    onPressed: openProfile,
-    icon: const Icon(Icons.person_outline),
-  ),
-],
+        title: const Text('Course Explorer'),
+        actions: [
+          Consumer<CourseState>(
+            builder: (context, state, _) {
+              return IconButton(
+                tooltip: 'Favorites',
+                icon: Badge(
+                  isLabelVisible: state.favorites.isNotEmpty,
+                  label: Text('${state.favorites.length}'),
+                  child: const Icon(Icons.favorite_border),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FavoritesPage(onCourseTap: openDetail),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Eksperimen ValueNotifier',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ValueNotifierExperimentPage(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.exposure_plus_1),
+          ),
+        ],
       ),
       body: SafeArea(
-        child: Column(
+        child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 15,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEDF4FA),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  '$studentId • $studentName',
-                  style: TextStyle(
-                    color: darkBlue,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+            if (isExpanded)
+              NavigationRail(
+                backgroundColor: navigationColor,
+                selectedIndex: selectedIndex,
+                labelType: NavigationRailLabelType.all,
+                onDestinationSelected: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+                destinations: const [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home),
+                    label: Text('Home'),
                   ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Row(
-                children: [
-                  if (isExpanded)
-                    NavigationRail(
-                      backgroundColor: navigationColor,
-                      selectedIndex: selectedIndex,
-                      labelType: NavigationRailLabelType.all,
-                      onDestinationSelected: (index) {
-                        setState(() {
-                          selectedIndex = index;
-                        });
-                      },
-                      destinations: const [
-                        NavigationRailDestination(
-                          icon: Icon(Icons.home_outlined),
-                          selectedIcon: Icon(Icons.home),
-                          label: Text('Home'),
-                        ),
-                        NavigationRailDestination(
-                          icon: Icon(Icons.book_outlined),
-                          selectedIcon: Icon(Icons.book),
-                          label: Text('Courses'),
-                        ),
-                        NavigationRailDestination(
-                          icon: Icon(Icons.favorite_border),
-                          selectedIcon: Icon(Icons.favorite),
-                          label: Text('Favorites'),
-                        ),
-                      ],
-                    ),
-                  Expanded(
-                    child: IndexedStack(index: selectedIndex, children: pages),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.book_outlined),
+                    selectedIcon: Icon(Icons.book),
+                    label: Text('Courses'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.person_outline),
+                    selectedIcon: Icon(Icons.person),
+                    label: Text('Profile'),
                   ),
                 ],
               ),
+            Expanded(
+              child: IndexedStack(index: selectedIndex, children: pages),
             ),
           ],
         ),
@@ -261,60 +224,196 @@ class _MainPageState extends State<MainPage> {
                   label: 'Courses',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.favorite_border, color: darkBlue),
-                  selectedIcon: Icon(Icons.favorite, color: darkBlue),
-                  label: 'Favorites',
+                  icon: Icon(Icons.person_outline, color: darkBlue),
+                  selectedIcon: Icon(Icons.person, color: darkBlue),
+                  label: 'Profile',
                 ),
               ],
             ),
     );
   }
 }
+
 // HOME PAGE
 class HomePage extends StatelessWidget {
-  final int favoriteCount;
-  final Set<String> favoriteCodes;
   final ValueChanged<Map<String, dynamic>> onCourseTap;
-  final ValueChanged<String> onFavoriteTap;
   const HomePage({
     super.key,
-    required this.favoriteCount,
-    required this.favoriteCodes,
     required this.onCourseTap,
-    required this.onFavoriteTap,
   });
+
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-      children: [
-        Row(
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
-              child: SummaryCard(title: 'Courses', value: '${courses.length}'),
+            // Icon Topi Toga (Graduation Cap)
+            const Icon(
+              Icons.school,
+              size: 80,
+              color: Color(0xFF232B38),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SummaryCard(title: 'Favorites', value: '$favoriteCount'),
+            const SizedBox(height: 18),
+
+            // Judul Course Explorer
+            const Text(
+              'Course Explorer',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+              textAlign: TextAlign.center,
             ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        ...courses
-            .take(3)
-            .map(
-              (course) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: CourseCard(
-                  course: course,
-                  isFavorite: favoriteCodes.contains(course['code']),
-                  onTap: () => onCourseTap(course),
-                  onFavoriteTap: () => onFavoriteTap(course['code']),
-                  compact: true,
+            const SizedBox(height: 8),
+
+            // Deskripsi Aplikasi
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Aplikasi untuk melihat daftar course dan informasi pembelajaran.',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF64748B),
+                  height: 1.35,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Card Identitas Mahasiswa
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 290),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1.2,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x08000000),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: const [
+                  Text(
+                    'Identitas Mahasiswa',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Nama: $studentName',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF334155),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'NIM: $studentId',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF334155),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Tombol Tampilkan Info
+            OutlinedButton.icon(
+              onPressed: () {
+                showDialog<void>(
+                  context: context,
+                  builder: (dialogContext) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Row(
+                        children: const [
+                          Icon(Icons.info_outline, color: primaryBlue),
+                          SizedBox(width: 8),
+                          Text('Informasi'),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Course Explorer',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text('Aplikasi pembelajaran Flutter UI Fundamentals.'),
+                          const Divider(height: 20),
+                          Text('Nama: $studentName'),
+                          Text('NIM: $studentId'),
+                          Consumer<CourseState>(
+                            builder: (context, state, _) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text('Favorit: ${state.favorites.length} course'),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text('Tutup'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              icon: const Icon(
+                Icons.info_outline,
+                size: 18,
+                color: Color(0xFF475569),
+              ),
+              label: const Text(
+                'Tampilkan Info',
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFFF8FAFC),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
                 ),
               ),
             ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -355,14 +454,10 @@ class SummaryCard extends StatelessWidget {
 }
 // COURSES PAGE
 class CoursesPage extends StatelessWidget {
-  final Set<String> favoriteCodes;
   final ValueChanged<Map<String, dynamic>> onCourseTap;
-  final ValueChanged<String> onFavoriteTap;
   const CoursesPage({
     super.key,
-    required this.favoriteCodes,
     required this.onCourseTap,
-    required this.onFavoriteTap,
   });
   @override
   Widget build(BuildContext context) {
@@ -386,9 +481,7 @@ class CoursesPage extends StatelessWidget {
             final course = courses[index];
             return CourseCard(
               course: course,
-              isFavorite: favoriteCodes.contains(course['code']),
               onTap: () => onCourseTap(course),
-              onFavoriteTap: () => onFavoriteTap(course['code']),
             );
           },
         );
@@ -398,19 +491,16 @@ class CoursesPage extends StatelessWidget {
 }
 // FAVORITES PAGE
 class FavoritesPage extends StatelessWidget {
-  final Set<String> favoriteCodes;
   final ValueChanged<Map<String, dynamic>> onCourseTap;
-  final ValueChanged<String> onFavoriteTap;
   const FavoritesPage({
     super.key,
-    required this.favoriteCodes,
     required this.onCourseTap,
-    required this.onFavoriteTap,
   });
   @override
   Widget build(BuildContext context) {
+    final courseState = context.watch<CourseState>();
     final favoriteCourses = courses
-        .where((course) => favoriteCodes.contains(course['code']))
+        .where((course) => courseState.isFavorite(course['code'] as String))
         .toList();
     if (favoriteCourses.isEmpty) {
       return const Center(
@@ -429,9 +519,7 @@ class FavoritesPage extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 12),
           child: CourseCard(
             course: course,
-            isFavorite: true,
             onTap: () => onCourseTap(course),
-            onFavoriteTap: () => onFavoriteTap(course['code']),
             compact: true,
           ),
         );
@@ -442,20 +530,18 @@ class FavoritesPage extends StatelessWidget {
 // COURSE CARD
 class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
-  final bool isFavorite;
   final VoidCallback onTap;
-  final VoidCallback onFavoriteTap;
   final bool compact;
   const CourseCard({
     super.key,
     required this.course,
-    required this.isFavorite,
     required this.onTap,
-    required this.onFavoriteTap,
     this.compact = false,
   });
   @override
   Widget build(BuildContext context) {
+    final courseCode = course['code'] as String;
+
     return Card(
       margin: EdgeInsets.zero,
       color: cardColor,
@@ -507,15 +593,24 @@ class CourseCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                tooltip: isFavorite
-                    ? 'Hapus dari favorit'
-                    : 'Tambah ke favorit',
-                onPressed: onFavoriteTap,
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? greenColor : darkBlue,
-                ),
+              // 32. Gunakan Consumer pada satu bagian kecil UI
+              Consumer<CourseState>(
+                builder: (context, state, child) {
+                  final isFavorite = state.isFavorite(courseCode);
+                  return IconButton(
+                    tooltip: isFavorite
+                        ? 'Hapus dari favorit'
+                        : 'Tambah ke favorit',
+                    // 31. Gunakan read() pada tombol toggle favorite
+                    onPressed: () {
+                      context.read<CourseState>().toggleFavorite(courseCode);
+                    },
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? greenColor : darkBlue,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -527,16 +622,14 @@ class CourseCard extends StatelessWidget {
 // COURSE DETAIL PAGE
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
-  final bool isFavorite;
-  final VoidCallback onFavoriteTap;
   const CourseDetailPage({
     super.key,
     required this.course,
-    required this.isFavorite,
-    required this.onFavoriteTap,
   });
   @override
   Widget build(BuildContext context) {
+    final courseCode = course['code'] as String;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Course Detail')),
       body: ListView(
@@ -575,30 +668,37 @@ class CourseDetailPage extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text('Kategori: ${course['category']}'),
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      onFavoriteTap();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            isFavorite
-                                ? 'Course dihapus dari favorit'
-                                : 'Course ditambahkan ke favorit',
-                          ),
+                // 32. Gunakan Consumer pada satu bagian kecil UI
+                Consumer<CourseState>(
+                  builder: (context, state, child) {
+                    final isFavorite = state.isFavorite(courseCode);
+                    return SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        // 31. Gunakan read() pada tombol toggle favorite
+                        onPressed: () {
+                          context.read<CourseState>().toggleFavorite(courseCode);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isFavorite
+                                    ? 'Course dihapus dari favorit'
+                                    : 'Course ditambahkan ke favorit',
+                              ),
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
                         ),
-                      );
-                    },
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                    ),
-                    label: Text(
-                      isFavorite
-                          ? 'Hapus dari Favorites'
-                          : 'Tambah ke Favorites',
-                    ),
-                  ),
+                        label: Text(
+                          isFavorite
+                              ? 'Hapus dari Favorites'
+                              : 'Tambah ke Favorites',
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
