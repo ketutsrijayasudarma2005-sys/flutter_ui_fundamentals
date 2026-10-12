@@ -16,3 +16,5 @@ class CourseState extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+typedef CourseProvider = CourseState;

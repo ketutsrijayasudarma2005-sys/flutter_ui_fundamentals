@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'course_state.dart';
+
 
 const String studentName = 'I Ketut Srijaya Sudarma';
 const String studentId = '2415051063';
@@ -9,9 +12,16 @@ const Color cardColor = Color(0xFFF9FCFF);
 const Color navigationColor = Color(0xFFE4F1FC);
 const Color borderColor = Color(0xFFC3D8E9);
 const Color greenColor = Color(0xFF008F78);
+
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider<CourseState>(
+      create: (_) => CourseState(),
+      child: const MyApp(),
+    ),
+  );
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
