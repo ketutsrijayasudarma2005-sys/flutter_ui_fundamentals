@@ -35,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Berpindah ke tab Courses
-    await tester.tap(find.text('Courses'));
+    await tester.tap(find.text('Courses').last);
     await tester.pumpAndSettle();
 
     // 55. Verifikasi icon favorite pada CourseCard
@@ -63,7 +63,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Buka FavoritesPage lewat icon AppBar
-    await tester.tap(find.byTooltip('Favorites'));
+    await tester.tap(find.byTooltip('Favorites').first);
     await tester.pumpAndSettle();
 
     // 57. Buat FavoritesPage yang hanya menampilkan course favorite

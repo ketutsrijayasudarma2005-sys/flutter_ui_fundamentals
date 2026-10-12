@@ -22,8 +22,12 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  void submitFeedback() {
+  // 68. Kasus D: Periksa mounted setelah proses async sebelum memanggil setState/dialog
+  Future<void> submitFeedback() async {
     if (formKey.currentState!.validate()) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+
       showDialog<void>(
         context: context,
         builder: (dialogContext) {

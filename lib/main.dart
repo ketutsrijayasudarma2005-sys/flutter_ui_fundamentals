@@ -23,6 +23,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,11 +37,11 @@ class MyApp extends StatelessWidget {
           primary: primaryBlue,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: backgroundColor,
-          foregroundColor: darkBlue,
+          backgroundColor: primaryBlue,
+          foregroundColor: Colors.white,
           elevation: 0,
           titleTextStyle: TextStyle(
-            color: darkBlue,
+            color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -51,9 +52,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// MAIN PAGE
+// MAIN PAGE + RESPONSIVE NAVIGATION
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
+
   @override
   State<MainPage> createState() => _MainPageState();
 }
@@ -64,6 +66,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    // 60. Courses dimuat melalui Provider -> Repository -> Service
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CourseProvider>().loadCourses();
     });
@@ -87,16 +90,17 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 64. Responsive navigation (NavigationRail pada layar lebar, NavigationBar pada mobile)
     final isExpanded = MediaQuery.sizeOf(context).width >= 840;
     final pages = [
       HomePage(onCourseTap: openDetail),
       CoursesPage(onCourseTap: openDetail),
-      const ProfilePage(),
+      FavoritesPage(onCourseTap: openDetail),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Explorer'),
+        title: const Text('Course Explorer v2'),
         actions: [
           Consumer<CourseProvider>(
             builder: (context, state, _) {
@@ -117,6 +121,11 @@ class _MainPageState extends State<MainPage> {
                 },
               );
             },
+          ),
+          IconButton(
+            tooltip: 'Profile',
+            onPressed: openProfile,
+            icon: const Icon(Icons.person_outline),
           ),
           IconButton(
             tooltip: 'Eksperimen ValueNotifier',
@@ -157,9 +166,9 @@ class _MainPageState extends State<MainPage> {
                     label: Text('Courses'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.person_outline),
-                    selectedIcon: Icon(Icons.person),
-                    label: Text('Profile'),
+                    icon: Icon(Icons.favorite_outline),
+                    selectedIcon: Icon(Icons.favorite),
+                    label: Text('Favorites'),
                   ),
                 ],
               ),
@@ -195,9 +204,9 @@ class _MainPageState extends State<MainPage> {
                   label: 'Courses',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.person_outline, color: darkBlue),
-                  selectedIcon: Icon(Icons.person, color: darkBlue),
-                  label: 'Profile',
+                  icon: Icon(Icons.favorite_outline, color: darkBlue),
+                  selectedIcon: Icon(Icons.favorite, color: darkBlue),
+                  label: 'Favorites',
                 ),
               ],
             ),
