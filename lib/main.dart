@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 const String studentName = 'I Ketut Srijaya Sudarma';
 const String studentId = '2415051063';
-
 const Color primaryBlue = Color(0xFF1976D2);
 const Color darkBlue = Color(0xFF173B63);
 const Color backgroundColor = Color(0xFFF1F6FA);
@@ -10,14 +9,11 @@ const Color cardColor = Color(0xFFF9FCFF);
 const Color navigationColor = Color(0xFFE4F1FC);
 const Color borderColor = Color(0xFFC3D8E9);
 const Color greenColor = Color(0xFF008F78);
-
 void main() {
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -45,9 +41,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 // DATA COURSE
-
 const List<Map<String, dynamic>> courses = [
   {
     'code': 'MOB01',
@@ -85,22 +79,16 @@ const List<Map<String, dynamic>> courses = [
     'category': 'Flutter',
   },
 ];
-
 // MAIN PAGE
-
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
-
   @override
   State<MainPage> createState() => _MainPageState();
 }
-
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
-
   // Favorite disimpan terpusat agar bisa digunakan bersama.
   final Set<String> favoriteCodes = {'MOB01', 'MOB02'};
-
   void toggleFavorite(String code) {
     setState(() {
       if (favoriteCodes.contains(code)) {
@@ -110,7 +98,6 @@ class _MainPageState extends State<MainPage> {
       }
     });
   }
-
   void openDetail(Map<String, dynamic> course) {
     Navigator.push(
       context,
@@ -123,18 +110,15 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
-
   Future<void> openProfile() async {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ProfilePage()),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final isExpanded = MediaQuery.sizeOf(context).width >= 840;
-
     final pages = [
       HomePage(
         favoriteCount: favoriteCodes.length,
@@ -153,17 +137,28 @@ class _MainPageState extends State<MainPage> {
         onFavoriteTap: toggleFavorite,
       ),
     ];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Explorer '),
-        actions: [
-          IconButton(
-            tooltip: 'Profile',
-            onPressed: openProfile,
-            icon: const Icon(Icons.person_outline),
-          ),
-        ],
+      actions: [
+  IconButton(
+    tooltip: 'Eksperimen ValueNotifier',
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const ValueNotifierExperimentPage(),
+        ),
+      );
+    },
+    icon: const Icon(Icons.exposure_plus_1),
+  ),
+  IconButton(
+    tooltip: 'Profile',
+    onPressed: openProfile,
+    icon: const Icon(Icons.person_outline),
+  ),
+],
       ),
       body: SafeArea(
         child: Column(
@@ -265,15 +260,12 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
-
 // HOME PAGE
-
 class HomePage extends StatelessWidget {
   final int favoriteCount;
   final Set<String> favoriteCodes;
   final ValueChanged<Map<String, dynamic>> onCourseTap;
   final ValueChanged<String> onFavoriteTap;
-
   const HomePage({
     super.key,
     required this.favoriteCount,
@@ -281,7 +273,6 @@ class HomePage extends StatelessWidget {
     required this.onCourseTap,
     required this.onFavoriteTap,
   });
-
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -317,15 +308,11 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
 // SUMMARY CARD
-
 class SummaryCard extends StatelessWidget {
   final String title;
   final String value;
-
   const SummaryCard({super.key, required this.title, required this.value});
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -356,21 +343,17 @@ class SummaryCard extends StatelessWidget {
     );
   }
 }
-
 // COURSES PAGE
-
 class CoursesPage extends StatelessWidget {
   final Set<String> favoriteCodes;
   final ValueChanged<Map<String, dynamic>> onCourseTap;
   final ValueChanged<String> onFavoriteTap;
-
   const CoursesPage({
     super.key,
     required this.favoriteCodes,
     required this.onCourseTap,
     required this.onFavoriteTap,
   });
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -380,7 +363,6 @@ class CoursesPage extends StatelessWidget {
             : constraints.maxWidth >= 600
             ? 2
             : 1;
-
         return GridView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: courses.length,
@@ -392,7 +374,6 @@ class CoursesPage extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             final course = courses[index];
-
             return CourseCard(
               course: course,
               isFavorite: favoriteCodes.contains(course['code']),
@@ -405,27 +386,22 @@ class CoursesPage extends StatelessWidget {
     );
   }
 }
-
 // FAVORITES PAGE
-
 class FavoritesPage extends StatelessWidget {
   final Set<String> favoriteCodes;
   final ValueChanged<Map<String, dynamic>> onCourseTap;
   final ValueChanged<String> onFavoriteTap;
-
   const FavoritesPage({
     super.key,
     required this.favoriteCodes,
     required this.onCourseTap,
     required this.onFavoriteTap,
   });
-
   @override
   Widget build(BuildContext context) {
     final favoriteCourses = courses
         .where((course) => favoriteCodes.contains(course['code']))
         .toList();
-
     if (favoriteCourses.isEmpty) {
       return const Center(
         child: Text(
@@ -434,13 +410,11 @@ class FavoritesPage extends StatelessWidget {
         ),
       );
     }
-
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: favoriteCourses.length,
       itemBuilder: (context, index) {
         final course = favoriteCourses[index];
-
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: CourseCard(
@@ -455,16 +429,13 @@ class FavoritesPage extends StatelessWidget {
     );
   }
 }
-
 // COURSE CARD
-
 class CourseCard extends StatelessWidget {
   final Map<String, dynamic> course;
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onFavoriteTap;
   final bool compact;
-
   const CourseCard({
     super.key,
     required this.course,
@@ -473,7 +444,6 @@ class CourseCard extends StatelessWidget {
     required this.onFavoriteTap,
     this.compact = false,
   });
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -544,21 +514,17 @@ class CourseCard extends StatelessWidget {
     );
   }
 }
-
 // COURSE DETAIL PAGE
-
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
   final bool isFavorite;
   final VoidCallback onFavoriteTap;
-
   const CourseDetailPage({
     super.key,
     required this.course,
     required this.isFavorite,
     required this.onFavoriteTap,
   });
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -632,23 +598,17 @@ class CourseDetailPage extends StatelessWidget {
     );
   }
 }
-
 // PROFILE + FORM
-
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
-
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
-
 class _ProfilePageState extends State<ProfilePage> {
   final formKey = GlobalKey<FormState>();
-
   final nameController = TextEditingController();
   final nimController = TextEditingController();
   final commentController = TextEditingController();
-
   @override
   void dispose() {
     nameController.dispose();
@@ -656,7 +616,6 @@ class _ProfilePageState extends State<ProfilePage> {
     commentController.dispose();
     super.dispose();
   }
-
   void submitFeedback() {
     if (formKey.currentState!.validate()) {
       showDialog<void>(
@@ -678,7 +637,6 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -766,3 +724,92 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
+// TAHAP 4: EKSPERIMEN VALUENOTIFIER
+class ValueNotifierExperimentPage extends StatefulWidget {
+  const ValueNotifierExperimentPage({super.key});
+
+  @override
+  State<ValueNotifierExperimentPage> createState() =>
+      _ValueNotifierExperimentPageState();
+}
+
+class _ValueNotifierExperimentPageState
+    extends State<ValueNotifierExperimentPage> {
+  final ValueNotifier<int> favoriteCounter = ValueNotifier<int>(0);
+
+  @override
+  void dispose() {
+    favoriteCounter.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Eksperimen ValueNotifier'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.favorite, color: Colors.red, size: 60),
+              const SizedBox(height: 16),
+              const Text(
+                studentName,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text('NIM: $studentId'),
+              const SizedBox(height: 24),
+              const Text(
+                'Jumlah Favorit Eksperimen',
+                style: TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 12),
+              ValueListenableBuilder<int>(
+                valueListenable: favoriteCounter,
+                builder: (context, value, child) {
+                  return Text(
+                    '$value',
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: primaryBlue,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => favoriteCounter.value++,
+                icon: const Icon(Icons.add),
+                label: const Text('Tambah Favorit'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  if (favoriteCounter.value > 0) {
+                    favoriteCounter.value--;
+                  }
+                },
+                icon: const Icon(Icons.remove),
+                label: const Text('Kurangi Favorit'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => favoriteCounter.value = 0,
+                child: const Text('Reset Counter'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
