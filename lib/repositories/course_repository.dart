@@ -6,7 +6,7 @@ class CourseRepository {
 
   CourseRepository(this.service);
 
-  Future<List<Course>> getCourses() {
-    return service.loadCourses();
+  Future<List<Course>> getCourses({bool simulateError = false}) {
+    return service.loadCourses(simulateError: simulateError);
   }
 }

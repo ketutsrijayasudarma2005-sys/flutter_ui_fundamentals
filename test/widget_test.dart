@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ui_fundamentals/main.dart';
 import 'package:flutter_ui_fundamentals/providers/course_provider.dart';
+import 'package:flutter_ui_fundamentals/screens/courses_page.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -85,5 +86,33 @@ void main() {
 
     // Di Courses tab, item sudah kembali menjadi bukan favorit
     expect(find.byTooltip('Hapus dari favorit'), findsNothing);
+
+    // 67. Kasus C: Verifikasi error state pada CoursesPage
+    final provider = tester.element(find.byType(CoursesPage)).read<CourseProvider>();
+    await provider.loadCourses(simulateError: true);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.textContaining('Terjadi kesalahan:'), findsOneWidget);
+    expect(find.text('Coba Lagi'), findsOneWidget);
+
+    // Pulihkan data dengan menekan Coba Lagi
+    await tester.tap(find.text('Coba Lagi'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Git & GitHub'), findsWidgets);
+
+    // 68. Kasus D: Form Profile dengan async dan mounted check
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Profile'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nama'), 'Budi');
+    await tester.enterText(find.widgetWithText(TextFormField, 'NIM'), '1234567890');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Komentar'), 'Sangat informatif!');
+    await tester.tap(find.text('Kirim Feedback'));
+
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Feedback berhasil dikirim.'), findsOneWidget);
   });
 }
