@@ -14,16 +14,12 @@ class CourseProvider extends ChangeNotifier {
   String? error;
   final Set<String> favorites = {};
 
-  bool isFavorite(String id) {
-    return favorites.contains(id);
-  }
+  bool isFavorite(String code) => favorites.contains(code);
 
-  void toggleFavorite(String id) {
-    if (favorites.contains(id)) {
-      favorites.remove(id);
-    } else {
-      favorites.add(id);
-    }
+  void toggleFavorite(String code) {
+    favorites.contains(code)
+        ? favorites.remove(code)
+        : favorites.add(code);
     notifyListeners();
   }
 

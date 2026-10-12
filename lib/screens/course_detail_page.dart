@@ -17,7 +17,26 @@ class CourseDetailPage extends StatelessWidget {
     final courseCode = course.code;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Course Detail')),
+      appBar: AppBar(
+        title: const Text('Course Detail'),
+        actions: [
+          Consumer<CourseProvider>(
+            builder: (context, state, child) {
+              final isFavorite = state.isFavorite(courseCode);
+              return IconButton(
+                tooltip: isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit',
+                onPressed: () {
+                  context.read<CourseProvider>().toggleFavorite(courseCode);
+                },
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : darkBlue,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -37,13 +56,31 @@ class CourseDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  course.title,
-                  style: const TextStyle(
-                    color: darkBlue,
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        course.title,
+                        style: const TextStyle(
+                          color: darkBlue,
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Consumer<CourseProvider>(
+                      builder: (context, state, child) {
+                        final isFavorite = state.isFavorite(courseCode);
+                        return Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.grey,
+                          size: 28,
+                        );
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 Text('Kode: ${course.code}'),
@@ -53,6 +90,41 @@ class CourseDetailPage extends StatelessWidget {
                 Text('Status: ${course.status}'),
                 const SizedBox(height: 10),
                 Text('Kategori: ${course.category}'),
+                const SizedBox(height: 10),
+                // 56. Tampilkan status favorite pada DetailPage
+                Consumer<CourseProvider>(
+                  builder: (context, state, child) {
+                    final isFavorite = state.isFavorite(courseCode);
+                    return Row(
+                      children: [
+                        const Text('Status Favorit: '),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isFavorite
+                                ? const Color(0xFFFFEBEE)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isFavorite ? Colors.red : Colors.grey,
+                            ),
+                          ),
+                          child: Text(
+                            isFavorite ? 'Favorit' : 'Bukan Favorit',
+                            style: TextStyle(
+                              color: isFavorite ? Colors.red : Colors.grey[700],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
                 const SizedBox(height: 20),
                 Consumer<CourseProvider>(
                   builder: (context, state, child) {
@@ -74,6 +146,7 @@ class CourseDetailPage extends StatelessWidget {
                         },
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : null,
                         ),
                         label: Text(
                           isFavorite

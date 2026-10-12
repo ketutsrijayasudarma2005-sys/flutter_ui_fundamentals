@@ -23,32 +23,37 @@ class FavoritesPage extends StatelessWidget {
         .where((course) => courseState.isFavorite(course.code))
         .toList();
 
-    if (favoriteCourses.isEmpty) {
-      return const Center(
-        child: Text(
-          'Belum ada course favorit.',
-          style: TextStyle(color: darkBlue, fontSize: 16),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('Courses Favorit')),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: favoriteCourses.length,
-        itemBuilder: (context, index) {
-          final course = favoriteCourses[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: CourseCard(
-              course: course,
-              onTap: () => onCourseTap(course),
-              compact: true,
+      body: favoriteCourses.isEmpty
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.favorite_border, size: 64, color: Colors.grey),
+                  SizedBox(height: 12),
+                  Text(
+                    'Belum ada course favorit.',
+                    style: TextStyle(color: darkBlue, fontSize: 16),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: favoriteCourses.length,
+              itemBuilder: (context, index) {
+                final course = favoriteCourses[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: CourseCard(
+                    course: course,
+                    onTap: () => onCourseTap(course),
+                    compact: true,
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
