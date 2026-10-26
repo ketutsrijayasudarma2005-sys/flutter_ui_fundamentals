@@ -38,3 +38,51 @@ samples, guidance on mobile development, and a full API reference.
 **Catatan/Temuan:**
 
 Endpoint `/courses` digunakan untuk mengambil daftar data course menggunakan metode GET. Respons yang diterima berbentuk JSON array yang berisi objek course. Setiap objek memiliki informasi seperti identitas, kode, judul, jumlah kredit, status, dan waktu pembuatan. Struktur data ini menjadi dasar untuk memahami respons REST API sebelum dilakukan integrasi dengan aplikasi Flutter.
+
+---
+
+## Tahap 2 — HTTP GET dari Flutter
+
+### 13. Konstanta `apiUrl`
+Konstanta `apiUrl` didefinisikan pada [lib/constants.dart](file:///c:/src/flutter_ui_fundamentals/lib/constants.dart):
+```dart
+const String apiUrl = 'https://course-api-pearl.vercel.app/courses';
+```
+
+### 14. Pemanggilan GET Melalui Fungsi Asynchronous
+Fungsi `fetchCourses()` dibuat sementara pada [lib/main.dart](file:///c:/src/flutter_ui_fundamentals/lib/main.dart) (akan dipindahkan ke service pada Tahap 4):
+```dart
+Future<List<dynamic>> fetchCourses([String url = apiUrl]) async {
+  final response = await http.get(Uri.parse(url));
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  throw Exception('HTTP ${response.statusCode}');
+}
+```
+
+### 15. Tampilkan Jumlah Item pada debugPrint atau UI
+Hasil eksekusi `fetchCourses()` dipanggil di `_MainPageState.initState()`:
+- **Output `debugPrint`:**
+  ```text
+  [Tahap 2 HTTP GET] Status: 200 OK
+  [Tahap 2 HTTP GET] Jumlah item mata kuliah: 14
+  ```
+- **Tampilan UI:** Ditampilkan status banner hijau pada bagian atas konten utama (`Tahap 2 HTTP GET: GET 200 OK (14 items)`).
+
+### 16. Ubah Sementara Endpoint Menjadi Salah (Melihat Error)
+- Endpoint diubah sementara ke: `https://course-api-pearl.vercel.app/courses_salah`
+- **Hasil Respons:**
+  - Status Code: `404 Not Found`
+  - Exception tertangkap: `Exception: HTTP 404`
+- **Output `debugPrint`:**
+  ```text
+  [Tahap 2 HTTP GET] Terjadi kesalahan: Exception: HTTP 404
+  ```
+- **Tampilan UI:** Status banner berubah menjadi merah (`Tahap 2 HTTP GET: Error: Exception: HTTP 404`).
+
+### 17. Kembalikan Endpoint ke URL yang Benar
+- Endpoint dikembalikan ke URL semula: `https://course-api-pearl.vercel.app/courses`
+- **Hasil:** Request kembali sukses (`Status 200 OK`), mengembalikan `14` item mata kuliah dalam format `List<dynamic>`.

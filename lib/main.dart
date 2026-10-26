@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'constants.dart';
@@ -11,6 +13,17 @@ import 'screens/home_page.dart';
 import 'screens/profile_page.dart';
 
 export 'constants.dart';
+
+// 14. Panggil GET melalui function asynchronous (sementara; kode ini akan dipindahkan ke service pada Tahap 4)
+Future<List<dynamic>> fetchCourses([String url = apiUrl]) async {
+  final response = await http.get(Uri.parse(url));
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  throw Exception('HTTP ${response.statusCode}');
+}
 
 void main() {
   runApp(
@@ -62,14 +75,39 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
+  String? tahap2StatusMessage;
 
   @override
   void initState() {
     super.initState();
+    // 14 & 15. Panggil GET secara asynchronous dan tampilkan jumlah item pada debugPrint
+    _loadTahap2Courses();
+
     // 60. Courses dimuat melalui Provider -> Repository -> Service
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CourseProvider>().loadCourses();
     });
+  }
+
+  Future<void> _loadTahap2Courses() async {
+    try {
+      final items = await fetchCourses();
+      // 15. Tampilkan jumlah item pada debugPrint atau UI
+      debugPrint('[Tahap 2 HTTP GET] Status: 200 OK');
+      debugPrint('[Tahap 2 HTTP GET] Jumlah item mata kuliah: ${items.length}');
+      if (mounted) {
+        setState(() {
+          tahap2StatusMessage = 'GET 200 OK (${items.length} items)';
+        });
+      }
+    } catch (e) {
+      debugPrint('[Tahap 2 HTTP GET] Terjadi kesalahan: $e');
+      if (mounted) {
+        setState(() {
+          tahap2StatusMessage = 'Error: $e';
+        });
+      }
+    }
   }
 
   void openDetail(Course course) {
@@ -173,7 +211,50 @@ class _MainPageState extends State<MainPage> {
                 ],
               ),
             Expanded(
-              child: IndexedStack(index: selectedIndex, children: pages),
+              child: Column(
+                children: [
+                  if (tahap2StatusMessage != null)
+                    Container(
+                      width: double.infinity,
+                      color: tahap2StatusMessage!.startsWith('Error')
+                          ? const Color(0xFFFFEBEE)
+                          : const Color(0xFFE8F5E9),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            tahap2StatusMessage!.startsWith('Error')
+                                ? Icons.error_outline
+                                : Icons.check_circle_outline,
+                            size: 16,
+                            color: tahap2StatusMessage!.startsWith('Error')
+                                ? Colors.red.shade700
+                                : const Color(0xFF2E7D32),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Tahap 2 HTTP GET: $tahap2StatusMessage',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: tahap2StatusMessage!.startsWith('Error')
+                                    ? Colors.red.shade800
+                                    : const Color(0xFF1B5E20),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Expanded(
+                    child: IndexedStack(index: selectedIndex, children: pages),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
