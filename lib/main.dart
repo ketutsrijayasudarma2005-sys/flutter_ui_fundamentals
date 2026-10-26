@@ -14,12 +14,16 @@ import 'screens/profile_page.dart';
 
 export 'constants.dart';
 
-// 14. Panggil GET melalui function asynchronous (sementara; kode ini akan dipindahkan ke service pada Tahap 4)
-Future<List<dynamic>> fetchCourses([String url = apiUrl]) async {
+// 14 & 21. Panggil GET melalui function asynchronous dan konversi response list menjadi List<Course>
+Future<List<Course>> fetchCourses([String url = apiUrl]) async {
   final response = await http.get(Uri.parse(url));
 
   if (response.statusCode == 200) {
-    return jsonDecode(response.body) as List<dynamic>;
+    final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+    // 21. Konversi response list menjadi List<Course>
+    return data
+        .map((item) => Course.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   throw Exception('HTTP ${response.statusCode}');
@@ -75,13 +79,14 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
-  String? tahap2StatusMessage;
+  String? tahap3StatusMessage;
+  List<Course> apiCourses = [];
 
   @override
   void initState() {
     super.initState();
-    // 14 & 15. Panggil GET secara asynchronous dan tampilkan jumlah item pada debugPrint
-    _loadTahap2Courses();
+    // 14, 15, 21. Panggil GET secara asynchronous, konversi ke List<Course>, dan cetak di debugPrint
+    _loadTahap3Courses();
 
     // 60. Courses dimuat melalui Provider -> Repository -> Service
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -89,22 +94,26 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  Future<void> _loadTahap2Courses() async {
+  Future<void> _loadTahap3Courses() async {
     try {
-      final items = await fetchCourses();
-      // 15. Tampilkan jumlah item pada debugPrint atau UI
-      debugPrint('[Tahap 2 HTTP GET] Status: 200 OK');
-      debugPrint('[Tahap 2 HTTP GET] Jumlah item mata kuliah: ${items.length}');
+      final courses = await fetchCourses();
+      // 15 & 21. Debug print hasil konversi ke List<Course>
+      debugPrint('[Tahap 3] HTTP GET 200 OK — Berhasil memuat ${courses.length} Course');
+      for (var i = 0; i < (courses.length < 3 ? courses.length : 3); i++) {
+        final c = courses[i];
+        debugPrint('[Course ${i + 1}] Code: ${c.code}, Title: ${c.title}, Status: ${c.status}');
+      }
       if (mounted) {
         setState(() {
-          tahap2StatusMessage = 'GET 200 OK (${items.length} items)';
+          apiCourses = courses;
+          tahap3StatusMessage = '200 OK (${courses.length} Course parsed)';
         });
       }
     } catch (e) {
-      debugPrint('[Tahap 2 HTTP GET] Terjadi kesalahan: $e');
+      debugPrint('[Tahap 3] Terjadi kesalahan: $e');
       if (mounted) {
         setState(() {
-          tahap2StatusMessage = 'Error: $e';
+          tahap3StatusMessage = 'Error: $e';
         });
       }
     }
@@ -131,7 +140,7 @@ class _MainPageState extends State<MainPage> {
     // 64. Responsive navigation (NavigationRail pada layar lebar, NavigationBar pada mobile)
     final isExpanded = MediaQuery.sizeOf(context).width >= 840;
     final pages = [
-      HomePage(onCourseTap: openDetail),
+      HomePage(onCourseTap: openDetail, apiCourses: apiCourses),
       CoursesPage(onCourseTap: openDetail),
       FavoritesPage(onCourseTap: openDetail),
     ];
@@ -213,10 +222,10 @@ class _MainPageState extends State<MainPage> {
             Expanded(
               child: Column(
                 children: [
-                  if (tahap2StatusMessage != null)
+                  if (tahap3StatusMessage != null)
                     Container(
                       width: double.infinity,
-                      color: tahap2StatusMessage!.startsWith('Error')
+                      color: tahap3StatusMessage!.startsWith('Error')
                           ? const Color(0xFFFFEBEE)
                           : const Color(0xFFE8F5E9),
                       padding: const EdgeInsets.symmetric(
@@ -226,22 +235,22 @@ class _MainPageState extends State<MainPage> {
                       child: Row(
                         children: [
                           Icon(
-                            tahap2StatusMessage!.startsWith('Error')
+                            tahap3StatusMessage!.startsWith('Error')
                                 ? Icons.error_outline
                                 : Icons.check_circle_outline,
                             size: 16,
-                            color: tahap2StatusMessage!.startsWith('Error')
+                            color: tahap3StatusMessage!.startsWith('Error')
                                 ? Colors.red.shade700
                                 : const Color(0xFF2E7D32),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Tahap 2 HTTP GET: $tahap2StatusMessage',
+                              'Tahap 3 Model Course: $tahap3StatusMessage',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: tahap2StatusMessage!.startsWith('Error')
+                                color: tahap3StatusMessage!.startsWith('Error')
                                     ? Colors.red.shade800
                                     : const Color(0xFF1B5E20),
                               ),

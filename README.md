@@ -86,3 +86,58 @@ Hasil eksekusi `fetchCourses()` dipanggil di `_MainPageState.initState()`:
 ### 17. Kembalikan Endpoint ke URL yang Benar
 - Endpoint dikembalikan ke URL semula: `https://course-api-pearl.vercel.app/courses`
 - **Hasil:** Request kembali sukses (`Status 200 OK`), mengembalikan `14` item mata kuliah dalam format `List<dynamic>`.
+
+---
+
+## Tahap 3 — Model Dart: Course.fromJson() dan toJson()
+
+### 18. Pembaruan Model Course & Method `toJson()`
+File [lib/models/course.dart](file:///c:/src/flutter_ui_fundamentals/lib/models/course.dart) diperbarui:
+- Mempertahankan field `code`, `title`, `credits`, `status`, dan `category`.
+- Menambahkan field `id` bernilai nullable (`int?`).
+- Menambahkan konstruktor `const` dengan nilai default `status = 'planned'`.
+- Menambahkan method `toJson()` untuk serialisasi object kembali ke format Map JSON:
+  ```dart
+  Map<String, dynamic> toJson() => {
+    if (id != null) 'id': id,
+    'code': code,
+    'title': title,
+    'credits': credits,
+    'status': status,
+    'category': category,
+    if (createdAt != null) 'created_at': createdAt,
+  };
+  ```
+
+### 19. Nilai Default 'planned' pada `fromJson()`
+Jika key `status` bernilai `null` atau tidak dikirim oleh API:
+```dart
+status: (json['status'] as String?) ?? 'planned',
+```
+
+### 20. Penyesuaian Nama Field dengan JSON API
+Field JSON yang diterima dari endpoint REST API:
+- `id`: dipetakan ke `int? id`
+- `code`: dipetakan ke `String code`
+- `title`: dipetakan ke `String title`
+- `credits`: dipetakan ke `int credits`
+- `status`: dipetakan ke `String status` (fallback: `'planned'`)
+- `created_at`: dipetakan ke `String? createdAt`
+
+### 21. Konversi Response List Menjadi `List<Course>`
+Fungsi `fetchCourses()` pada [lib/main.dart](file:///c:/src/flutter_ui_fundamentals/lib/main.dart) mengonversi hasil JSON decoding menjadi daftar bertipe kuat (`List<Course>`):
+```dart
+final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+return data
+    .map((item) => Course.fromJson(item as Map<String, dynamic>))
+    .toList();
+```
+
+### 22. Tampilan Code, Title, dan Status Minimal Tiga Course pada UI
+Pada [lib/screens/home_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/home_page.dart) dan [lib/widgets/course_card.dart](file:///c:/src/flutter_ui_fundamentals/lib/widgets/course_card.dart):
+1. **Section Khusus Tahap 3 pada HomePage:** Menampilkan 3 course pertama yang berhasil dimuat dari REST API lengkap dengan `code`, `title`, dan status badge (`done`, `active`, `planned`).
+2. **CourseCard Global:** Seluruh card mata kuliah kini menampilkan kombinasi `code • status` bersama judul course.
+- Contoh 3 data pertama dari REST API:
+  - `[MOB04]` State Management Provider — status: `planned`
+  - `[MOB05]` REST API & Database — status: `done`
+  - `[MOB02]` Dart — status: `active`

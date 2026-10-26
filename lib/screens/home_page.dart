@@ -8,10 +8,12 @@ import '../widgets/summary_card.dart';
 
 class HomePage extends StatelessWidget {
   final ValueChanged<Course> onCourseTap;
+  final List<Course> apiCourses;
 
   const HomePage({
     super.key,
     required this.onCourseTap,
+    this.apiCourses = const [],
   });
 
   @override
@@ -65,6 +67,117 @@ class HomePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+
+        // 22. Tampilkan code, title, dan status minimal tiga course pada UI (Tahap 3)
+        if (apiCourses.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.hub_outlined, color: primaryBlue, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Tahap 3: Model Course (REST API)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: darkBlue,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ...apiCourses.take(3).map(
+                  (course) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              course.code,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: darkBlue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              course.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: darkBlue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: course.status == 'done'
+                                  ? const Color(0xFFE8F5E9)
+                                  : course.status == 'active'
+                                      ? const Color(0xFFE3F2FD)
+                                      : const Color(0xFFFFF3E0),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              course.status,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: course.status == 'done'
+                                    ? const Color(0xFF2E7D32)
+                                    : course.status == 'active'
+                                        ? primaryBlue
+                                        : const Color(0xFFE65100),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
 
         // Summary Cards: Courses & Favorites (62. Shared state)
         Row(

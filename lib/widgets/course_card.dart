@@ -51,12 +51,28 @@ class CourseCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 7),
-                    Text(
-                      course.status,
-                      style: const TextStyle(
-                        color: greenColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          course.code,
+                          style: const TextStyle(
+                            color: Color(0xFF1E293B),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text('•', style: TextStyle(color: Color(0xFF94A3B8))),
+                        const SizedBox(width: 6),
+                        Text(
+                          course.status,
+                          style: const TextStyle(
+                            color: greenColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                     if (!compact) ...[
                       const SizedBox(height: 5),
