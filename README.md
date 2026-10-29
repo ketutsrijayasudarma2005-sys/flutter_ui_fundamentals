@@ -525,6 +525,40 @@ Identitas mahasiswa tetap dipertahankan dan ditampilkan pada header `HomePage` d
 - **NIM:** 2415051063
 - **Kelas:** PTI 5A
 
+---
+
+## Tahap 13 — INSERT: Menambah Data ke Database (Supabase)
+
+### 76 & 77. Form Create Course & Validasi Field
+Menggunakan form `AddCoursePage` ([lib/screens/add_course_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/add_course_page.dart)) untuk input data mata kuliah baru:
+- Field `code`: Wajib diisi (tidak boleh kosong).
+- Field `title`: Wajib diisi (tidak boleh kosong).
+- Field `credits`: Wajib diisi dan harus berupa angka positif.
+- Field `status`: Pilihan dropdown (`planned`, `active`, `done`).
+
+### 78. Method `createCourse` pada `CourseSupabaseService`
+Mengganti stub `createCourse` pada [lib/services/course_supabase_service.dart](file:///c:/src/flutter_ui_fundamentals/lib/services/course_supabase_service.dart) dengan pemanggilan query insert ke tabel `courses`:
+```dart
+@override
+Future<Course> createCourse(Course course) async {
+  final row = await supabase
+      .from('courses')
+      .insert(course.toJson())
+      .select()
+      .single();
+
+  return Course.fromJson(row);
+}
+```
+Method mengembalikan object `Course` baru yang memiliki `id` dari database sehingga kontrak `CourseDataSource` dan `CourseRepository` tetap konsisten tanpa perubahan arsitektur.
+
+### 79. Refresh List Otomatis
+Setelah penambahan data berhasil melalui `CourseProvider.createCourse`, fungsi `loadCourses()` otomatis dipanggil untuk me-refresh data course pada aplikasi (mengganti isi list, bukan sekadar append).
+
+### 80. Verifikasi Row Baru
+Data baru dapat diverifikasi langsung pada aplikasi (di `HomePage`, `CoursesPage`, dan daftar card) serta di dashboard database Supabase.
+
+
 
 
 

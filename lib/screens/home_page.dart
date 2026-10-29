@@ -539,7 +539,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSupabaseResultBox() {
+  Widget _buildSupabaseResultBox([CourseProvider? courseState]) {
     if (_isSupabaseLoading) {
       return Container(
         width: double.infinity,
@@ -624,7 +624,11 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    final items = _supabaseCourses;
+    final items = (courseState != null &&
+            courseState.courses.isNotEmpty &&
+            courseState.repository.dataSource is CourseSupabaseService)
+        ? courseState.courses
+        : _supabaseCourses;
 
     return Container(
       width: double.infinity,
@@ -685,7 +689,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTahap12SupabaseCard() {
+  Widget _buildTahap12SupabaseCard([CourseProvider? courseState]) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -764,7 +768,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildSupabaseResultBox(),
+          _buildSupabaseResultBox(courseState),
         ],
       ),
     );
@@ -1028,7 +1032,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 16),
 
           // Tahap 12 – Database Supabase (SELECT) Card
-          _buildTahap12SupabaseCard(),
+          _buildTahap12SupabaseCard(courseState),
           const SizedBox(height: 16),
 
           // Summary Cards: Courses & Favorites

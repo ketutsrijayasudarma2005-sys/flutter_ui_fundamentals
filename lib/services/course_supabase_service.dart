@@ -33,6 +33,10 @@ const List<Course> defaultDatabaseCourses = [
   ),
 ];
 
+// Cache lokal untuk mendukung sinkronisasi data tabel Supabase
+final List<Course> _localDatabaseCourses =
+    List<Course>.from(defaultDatabaseCourses);
+
 // 71. CourseSupabaseService implements CourseDataSource
 class CourseSupabaseService implements CourseDataSource {
   CourseSupabaseService([SupabaseClient? client]) : _client = client;
@@ -55,16 +59,27 @@ class CourseSupabaseService implements CourseDataSource {
           .toList();
 
       if (list.isNotEmpty) return list;
-      return defaultDatabaseCourses;
+      return List<Course>.from(_localDatabaseCourses);
     } catch (_) {
-      return defaultDatabaseCourses;
+      return List<Course>.from(_localDatabaseCourses);
     }
   }
 
-  // Sementara, agar kelas tetap dapat dikompilasi:
+  // 78. INSERT data melalui Supabase; method mengembalikan Course (row baru)
   @override
-  Future<Course> createCourse(Course course) => throw UnimplementedError();
+  Future<Course> createCourse(Course course) async {
+    final row = await supabase
+        .from('courses')
+        .insert(course.toJson())
+        .select()
+        .single();
 
+    final created = Course.fromJson(row);
+    _localDatabaseCourses.add(created);
+    return created;
+  }
+
+  // Sementara, agar kelas tetap dapat dikompilasi:
   @override
   Future<void> updateCourse(int id, Course course) => throw UnimplementedError();
 

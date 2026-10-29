@@ -45,9 +45,5 @@ class Course {
     'title': title,
     'credits': credits,
     'status': status,
-    'category': category,
-    if (createdAt != null) 'created_at': createdAt,
-    if (description != null) 'description': description,
-    if (userId != null) 'userId': userId,
   };
 }

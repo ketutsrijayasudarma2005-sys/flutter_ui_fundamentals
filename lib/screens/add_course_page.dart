@@ -111,7 +111,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
                 child: Column(
                   children: const [
                     Text(
-                      'Tahap 6 — HTTP POST Resource Baru',
+                      'Tahap 13 — INSERT: Menambah Data ke Database',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
