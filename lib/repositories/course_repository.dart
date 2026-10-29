@@ -1,12 +1,15 @@
 import '../models/course.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
 
 class CourseRepository {
-  final CourseService service;
+  final CourseApiService service;
 
   CourseRepository(this.service);
 
   Future<List<Course>> getCourses({bool simulateError = false}) {
-    return service.loadCourses(simulateError: simulateError);
+    if (simulateError) {
+      throw Exception('Gagal memuat data dari CourseApiService (Simulasi Kasus C)');
+    }
+    return service.getCourses();
   }
 }

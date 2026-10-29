@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'constants.dart';
@@ -11,23 +9,15 @@ import 'screens/courses_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/home_page.dart';
 import 'screens/profile_page.dart';
+import 'services/course_api_service.dart';
 
 export 'constants.dart';
+export 'services/course_api_service.dart';
 
-// 14 & 21. Panggil GET melalui function asynchronous dan konversi response list menjadi List<Course>
-Future<List<Course>> fetchCourses([String url = apiUrl]) async {
-  final response = await http.get(Uri.parse(url));
-
-  if (response.statusCode == 200) {
-    final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
-    // 21. Konversi response list menjadi List<Course>
-    return data
-        .map((item) => Course.fromJson(item as Map<String, dynamic>))
-        .toList();
-  }
-
-  throw Exception('HTTP ${response.statusCode}');
-}
+// 26. Seluruh kode GET telah dipindahkan ke CourseApiService.
+// Fungsi fetchCourses didelegasikan ke CourseApiService untuk kompatibilitas pengujian
+Future<List<Course>> fetchCourses([String url = apiUrl]) =>
+    CourseApiService(url).getCourses();
 
 void main() {
   runApp(
@@ -79,44 +69,14 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
-  String? tahap3StatusMessage;
-  List<Course> apiCourses = [];
 
   @override
   void initState() {
     super.initState();
-    // 14, 15, 21. Panggil GET secara asynchronous, konversi ke List<Course>, dan cetak di debugPrint
-    _loadTahap3Courses();
-
-    // 60. Courses dimuat melalui Provider -> Repository -> Service
+    // 27. Screen hanya memanggil service/repository melalui CourseProvider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CourseProvider>().loadCourses();
     });
-  }
-
-  Future<void> _loadTahap3Courses() async {
-    try {
-      final courses = await fetchCourses();
-      // 15 & 21. Debug print hasil konversi ke List<Course>
-      debugPrint('[Tahap 3] HTTP GET 200 OK — Berhasil memuat ${courses.length} Course');
-      for (var i = 0; i < (courses.length < 3 ? courses.length : 3); i++) {
-        final c = courses[i];
-        debugPrint('[Course ${i + 1}] Code: ${c.code}, Title: ${c.title}, Status: ${c.status}');
-      }
-      if (mounted) {
-        setState(() {
-          apiCourses = courses;
-          tahap3StatusMessage = '200 OK (${courses.length} Course parsed)';
-        });
-      }
-    } catch (e) {
-      debugPrint('[Tahap 3] Terjadi kesalahan: $e');
-      if (mounted) {
-        setState(() {
-          tahap3StatusMessage = 'Error: $e';
-        });
-      }
-    }
   }
 
   void openDetail(Course course) {
@@ -140,7 +100,7 @@ class _MainPageState extends State<MainPage> {
     // 64. Responsive navigation (NavigationRail pada layar lebar, NavigationBar pada mobile)
     final isExpanded = MediaQuery.sizeOf(context).width >= 840;
     final pages = [
-      HomePage(onCourseTap: openDetail, apiCourses: apiCourses),
+      HomePage(onCourseTap: openDetail),
       CoursesPage(onCourseTap: openDetail),
       FavoritesPage(onCourseTap: openDetail),
     ];
@@ -222,43 +182,80 @@ class _MainPageState extends State<MainPage> {
             Expanded(
               child: Column(
                 children: [
-                  if (tahap3StatusMessage != null)
-                    Container(
-                      width: double.infinity,
-                      color: tahap3StatusMessage!.startsWith('Error')
-                          ? const Color(0xFFFFEBEE)
-                          : const Color(0xFFE8F5E9),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            tahap3StatusMessage!.startsWith('Error')
-                                ? Icons.error_outline
-                                : Icons.check_circle_outline,
-                            size: 16,
-                            color: tahap3StatusMessage!.startsWith('Error')
-                                ? Colors.red.shade700
-                                : const Color(0xFF2E7D32),
+                  Consumer<CourseProvider>(
+                    builder: (context, provider, _) {
+                      if (provider.isLoading) {
+                        return Container(
+                          width: double.infinity,
+                          color: const Color(0xFFE3F2FD),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Tahap 3 Model Course: $tahap3StatusMessage',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: tahap3StatusMessage!.startsWith('Error')
-                                    ? Colors.red.shade800
-                                    : const Color(0xFF1B5E20),
+                          child: const Row(
+                            children: [
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Tahap 4 Service Layer: Memuat data via CourseApiService...',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: primaryBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      final isError = provider.error != null;
+                      final message = isError
+                          ? 'Error: ${provider.error}'
+                          : '200 OK (${provider.courses.length} Course dimuat via CourseApiService)';
+
+                      return Container(
+                        width: double.infinity,
+                        color: isError
+                            ? const Color(0xFFFFEBEE)
+                            : const Color(0xFFE8F5E9),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isError
+                                  ? Icons.error_outline
+                                  : Icons.check_circle_outline,
+                              size: 16,
+                              color: isError
+                                  ? Colors.red.shade700
+                                  : const Color(0xFF2E7D32),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Tahap 4 Service Layer: $message',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isError
+                                      ? Colors.red.shade800
+                                      : const Color(0xFF1B5E20),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                   Expanded(
                     child: IndexedStack(index: selectedIndex, children: pages),
                   ),

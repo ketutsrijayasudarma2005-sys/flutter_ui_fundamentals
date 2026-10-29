@@ -1,0 +1,29 @@
+//Nama : I Ketut Srijaya Sudarma
+//NIM : 2415051063
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/course.dart';
+
+class CourseApiService {
+  CourseApiService([String? baseUrl])
+      : baseUrl = baseUrl ?? 'https://course-api-pearl.vercel.app';
+
+  final String baseUrl;
+
+  Future<List<Course>> getCourses() async {
+    final endpoint = baseUrl.endsWith('/courses')
+        ? baseUrl
+        : '$baseUrl/courses';
+    final response = await http.get(Uri.parse(endpoint));
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal mengambil course');
+    }
+
+    final List data = jsonDecode(response.body) as List;
+    return data
+        .map((e) => Course.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+}

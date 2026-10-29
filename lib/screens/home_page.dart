@@ -23,6 +23,9 @@ class HomePage extends StatelessWidget {
         ? courseState.courses
         : courses.map((json) => Course.fromJson(json)).toList();
 
+    final activeApiCourses =
+        apiCourses.isNotEmpty ? apiCourses : courseState.courses;
+
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       children: [
@@ -68,8 +71,8 @@ class HomePage extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // 22. Tampilkan code, title, dan status minimal tiga course pada UI (Tahap 3)
-        if (apiCourses.isNotEmpty) ...[
+        // 22 & 27. Tampilkan code, title, dan status minimal tiga course pada UI (Service Layer)
+        if (activeApiCourses.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -85,7 +88,7 @@ class HomePage extends StatelessWidget {
                     Icon(Icons.hub_outlined, color: primaryBlue, size: 18),
                     SizedBox(width: 8),
                     Text(
-                      'Tahap 3: Model Course (REST API)',
+                      'Tahap 4: Service Layer (CourseApiService)',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -95,7 +98,7 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                ...apiCourses.take(3).map(
+                ...activeApiCourses.take(3).map(
                   (course) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Container(

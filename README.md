@@ -141,3 +141,69 @@ Pada [lib/screens/home_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/scr
   - `[MOB04]` State Management Provider — status: `planned`
   - `[MOB05]` REST API & Database — status: `done`
   - `[MOB02]` Dart — status: `active`
+
+---
+
+## Tahap 4 — Memindahkan HTTP ke Service Layer
+
+Screen tidak seharusnya berisi detail request HTTP. Data source/service bertanggung jawab berkomunikasi dengan backend sesuai arsitektur integrasi:
+`Presentation (Screen/Widget) -> State/Controller (Provider) -> Repository -> Service/Data Source -> Backend & Database`.
+
+### 23. Pembuatan `lib/services/course_api_service.dart`
+Membuat class `CourseApiService` yang bertanggung jawab melakukan HTTP GET ke REST API dan mengonversi response JSON menjadi `List<Course>`:
+```dart
+class CourseApiService {
+  CourseApiService([String? baseUrl])
+      : baseUrl = baseUrl ?? 'https://course-api-pearl.vercel.app';
+
+  final String baseUrl;
+
+  Future<List<Course>> getCourses() async {
+    final endpoint = baseUrl.endsWith('/courses')
+        ? baseUrl
+        : '$baseUrl/courses';
+    final response = await http.get(Uri.parse(endpoint));
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal mengambil course');
+    }
+
+    final List data = jsonDecode(response.body) as List;
+    return data
+        .map((e) => Course.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+}
+```
+
+### 24. Pembaruan Dependency `CourseRepository`
+Dependency [lib/repositories/course_repository.dart](file:///c:/src/flutter_ui_fundamentals/lib/repositories/course_repository.dart) diubah dari `CourseService` menjadi `CourseApiService`, dan pemanggilan method disesuaikan dari `loadCourses()` menjadi `getCourses()`:
+```dart
+class CourseRepository {
+  final CourseApiService service;
+
+  CourseRepository(this.service);
+
+  Future<List<Course>> getCourses({bool simulateError = false}) {
+    if (simulateError) {
+      throw Exception('Gagal memuat data dari CourseApiService (Simulasi Kasus C)');
+    }
+    return service.getCourses();
+  }
+}
+```
+
+### 25. Penghapusan `lib/services/course_service.dart`
+File `lib/services/course_service.dart` dihapus dari pelacakan git menggunakan:
+```bash
+git rm lib/services/course_service.dart
+```
+
+### 26. Pemindahan Seluruh Kode GET dari UI ke Service
+Logika `http.get` dan deserialisasi `jsonDecode` yang sebelumnya ada di UI [lib/main.dart](file:///c:/src/flutter_ui_fundamentals/lib/main.dart) sepenuhnya dipindahkan ke `CourseApiService`. File `main.dart` tidak lagi mengimpor package `http` maupun `dart:convert`.
+
+### 27. Screen Hanya Memanggil Service/Repository Melalui Provider
+Screen (`MainPage`, `HomePage`, `CoursesPage`) kini hanya memanggil `CourseProvider`, yang mengelola state data dari `CourseRepository` dan `CourseApiService`. UI menjadi bersih dan terpisah dari implementasi backend.
+
+### 28. Menjalankan Kembali Aplikasi dan Pengujian
+Seluruh pengujian (`test/tahap2_http_test.dart`, `test/tahap3_model_test.dart`, `test/tahap4_service_test.dart`, dan `test/widget_test.dart`) berhasil dijalankan dengan hasil **100% lulus (All tests passed)**.

@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_ui_fundamentals/main.dart';
+import 'package:flutter_ui_fundamentals/models/course.dart';
 import 'package:flutter_ui_fundamentals/providers/course_provider.dart';
+import 'package:flutter_ui_fundamentals/repositories/course_repository.dart';
 import 'package:flutter_ui_fundamentals/screens/courses_page.dart';
 import 'package:provider/provider.dart';
+
+class _MockCourseApiService extends CourseApiService {
+  _MockCourseApiService() : super('https://mock.api');
+
+  @override
+  Future<List<Course>> getCourses() async {
+    return courses.map((json) => Course.fromJson(json)).toList();
+  }
+}
 
 void main() {
   testWidgets('Course Explorer HomePage and interaction test', (WidgetTester tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider<CourseProvider>(
-        create: (_) => CourseProvider(),
+        create: (_) => CourseProvider(CourseRepository(_MockCourseApiService())),
         child: const MyApp(),
       ),
     );

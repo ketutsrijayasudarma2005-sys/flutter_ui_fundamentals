@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 const String studentName = 'I Ketut Srijaya Sudarma';
 const String studentId = '2415051063';
 
-// 13. Konstanta apiUrl sesuai endpoint latihan
+// 13. Konstanta baseUrl & apiUrl sesuai endpoint latihan
+const String baseUrl = 'https://course-api-pearl.vercel.app';
+const String apiBaseUrl = baseUrl;
 const String apiUrl = 'https://course-api-pearl.vercel.app/courses';
 
 const Color primaryBlue = Color(0xFF1976D2);
