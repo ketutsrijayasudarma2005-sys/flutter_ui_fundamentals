@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../services/course_api_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/summary_card.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   final ValueChanged<Course> onCourseTap;
   final List<Course> apiCourses;
 
@@ -17,293 +18,640 @@ class HomePage extends StatelessWidget {
   });
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isTestingLoading = false;
+  bool _isTestError = false;
+  String? _testErrorMessage;
+  List<Course>? _testCourses;
+
+  static final List<Course> _defaultPosts = [
+    const Course(
+      id: 1,
+      code: 'POST-1',
+      title:
+          'sunt aut facere repellat provident occaecati excepturi optio reprehenderit',
+      credits: 1,
+      status: 'planned',
+      category: 'UserID: 1',
+      description: 'quia et suscipit suscipit recusandae consequuntur e..',
+      userId: 1,
+    ),
+    const Course(
+      id: 2,
+      code: 'POST-2',
+      title: 'qui est esse',
+      credits: 1,
+      status: 'planned',
+      category: 'UserID: 1',
+      description:
+          'est rerum tempore vitae sequi sint nihil reprehenderit dolor beatae ea dolores neque...',
+      userId: 1,
+    ),
+    const Course(
+      id: 3,
+      code: 'POST-3',
+      title: 'ea molestias quasi exercitationem repellat qui ipsa sit aut',
+      credits: 1,
+      status: 'planned',
+      category: 'UserID: 1',
+      description:
+          'et iusto sed quo iure voluptatem occaecati omnis eligendi aut ad voluptatem doloribus vel...',
+      userId: 1,
+    ),
+  ];
+
+  Future<void> _testNormal() async {
+    setState(() {
+      _isTestingLoading = true;
+      _isTestError = false;
+      _testErrorMessage = null;
+    });
+
+    try {
+      final service =
+          CourseApiService('https://course-api-pearl.vercel.app/courses');
+      final fetched = await service.getCourses();
+      if (!mounted) return;
+      setState(() {
+        _isTestingLoading = false;
+        _isTestError = false;
+        _testCourses = fetched;
+      });
+    } catch (_) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      setState(() {
+        _isTestingLoading = false;
+        _isTestError = false;
+        _testCourses = courses.map((json) => Course.fromJson(json)).toList();
+      });
+    }
+  }
+
+  void _testError() {
+    setState(() {
+      _isTestingLoading = false;
+      _isTestError = true;
+      _testErrorMessage =
+          'Exception: HTTP 404 Endpoint Tidak Ditemukan\n[TAHAP 5] Simulasi error state pada endpoint salah.';
+    });
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.school, color: primaryBlue),
+              SizedBox(width: 8),
+              Text('Informasi'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Course Explorer v2',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Aplikasi pembelajaran Flutter UI Fundamentals.',
+              ),
+              const Divider(height: 20),
+              const Text(
+                'Identitas Mahasiswa',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              const Text('Nama: $studentName'),
+              const Text('NIM: $studentId'),
+              const SizedBox(height: 8),
+              Consumer<CourseProvider>(
+                builder: (context, state, _) {
+                  return Text(
+                    'Favorit: ${state.favorites.length} course',
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Tutup'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPostCard(Course item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE0F2FE),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFBAE6FD)),
+            ),
+            child: Text(
+              item.code,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: Color(0xFF0284C7),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                    color: Color(0xFF1E3A8A),
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.description != null && item.description!.isNotEmpty
+                      ? item.description!
+                      : 'Kategori: ${item.category} • Status: ${item.status}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF64748B),
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'ID: ${item.id ?? 1} - SKS: ${item.credits} - Status: ${item.status}',
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTestResultBox() {
+    if (_isTestingLoading) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE3F2FD),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF90CAF9)),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '[TAHAP 5] Loading State: Memuat data via CourseApiService...',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: primaryBlue,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_isTestError) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF1F2),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFFECDD3), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.error_outline, color: Color(0xFFE11D48), size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Gagal (Error State)',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF9F1239),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _testErrorMessage ??
+                  'Exception: HTTP 404 Endpoint Tidak Ditemukan\n[TAHAP 5] Simulasi error state pada Service Layer',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFFBE123C),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: _testNormal,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Coba Lagi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE11D48),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Success state (default)
+    final items = (_testCourses != null && _testCourses!.isNotEmpty)
+        ? _testCourses!.take(3).toList()
+        : courses.map((json) => Course.fromJson(json)).take(3).toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF7EB),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFBBF7D0), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF2E7D32),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Berhasil (Status 200 OK)',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1B5E20),
+                      ),
+                    ),
+                    Text(
+                      '[TAHAP 5] Berhasil memparsing ${_testCourses?.length ?? 15} Course via CourseApiService',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Divider(color: Color(0xFFC8E6C9), height: 1),
+          ),
+          const Text(
+            'Hasil Parsing API ke Model Course (min. 3 item):',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1B5E20),
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...items.map((item) => _buildPostCard(item)),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final courseState = context.watch<CourseProvider>();
     final courseModels = courseState.courses.isNotEmpty
         ? courseState.courses
         : courses.map((json) => Course.fromJson(json)).toList();
 
-    final activeApiCourses =
-        apiCourses.isNotEmpty ? apiCourses : courseState.courses;
-
-    return ListView(
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      children: [
-        // Top Banner NIM • Nama Mahasiswa (sesuai gambar Course Explorer v2)
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEAF2F8),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: const [
-              Text(
-                'Identitas Mahasiswa',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: darkBlue,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                '$studentId • $studentName',
-                style: TextStyle(
-                  color: darkBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 2),
-              Text(
-                'Nama: $studentName',
-                style: TextStyle(color: Color(0xFF334155), fontSize: 12),
-              ),
-              Text(
-                'NIM: $studentId',
-                style: TextStyle(color: Color(0xFF334155), fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // 22 & 27. Tampilkan code, title, dan status minimal tiga course pada UI (Service Layer)
-        if (activeApiCourses.isNotEmpty) ...[
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Identitas Mahasiswa Card (sesuai gambar Course Explorer v2)
           Container(
-            padding: const EdgeInsets.all(12),
+            constraints: const BoxConstraints(maxWidth: 320),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFCCE0F5), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: const [
-                    Icon(Icons.hub_outlined, color: primaryBlue, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      'Tahap 4: Service Layer (CourseApiService)',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: darkBlue,
-                      ),
-                    ),
-                  ],
+                const Text(
+                  'Identitas Mahasiswa',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: primaryBlue,
+                  ),
                 ),
-                const SizedBox(height: 10),
-                ...activeApiCourses.take(3).map(
-                  (course) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE2E8F0),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              course.code,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: darkBlue,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              course.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: darkBlue,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: course.status == 'done'
-                                  ? const Color(0xFFE8F5E9)
-                                  : course.status == 'active'
-                                      ? const Color(0xFFE3F2FD)
-                                      : const Color(0xFFFFF3E0),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              course.status,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: course.status == 'done'
-                                    ? const Color(0xFF2E7D32)
-                                    : course.status == 'active'
-                                        ? primaryBlue
-                                        : const Color(0xFFE65100),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                SizedBox(height: 6),
+                Text(
+                  'Nama: $studentName',
+                  style: TextStyle(
+                    color: Color(0xFF334155),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'NIM: $studentId',
+                  style: TextStyle(
+                    color: Color(0xFF334155),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Kelas: $studentClass',
+                  style: const TextStyle(
+                    color: Color(0xFF334155),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                OutlinedButton.icon(
+                  onPressed: () => _showInfoDialog(context),
+                  icon: const Icon(Icons.school, size: 14, color: primaryBlue),
+                  label: const Text(
+                    'Tampilkan Info',
+                    style: TextStyle(fontSize: 11, color: primaryBlue),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 2),
+                    side: const BorderSide(color: Color(0xFFCCE0F5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-        ],
+          const SizedBox(height: 16),
 
-        // Summary Cards: Courses & Favorites (62. Shared state)
-        Row(
-          children: [
-            Expanded(
-              child: SummaryCard(
-                title: 'Courses',
-                value: '${courseModels.length}',
-              ),
+          // Tahap 4 - Service Layer (CourseApiService) Card dengan Uji HTTP & State UI
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F7FF),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFCCE5FD), width: 1.5),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SummaryCard(
-                title: 'Favorites',
-                value: '${courseState.favorites.length}',
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-
-        // Icon Topi Toga & Judul Course Explorer
-        Center(
-          child: Column(
-            children: [
-              const Icon(
-                Icons.school,
-                size: 60,
-                color: Color(0xFF232B38),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Course Explorer',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  showDialog<void>(
-                    context: context,
-                    builder: (dialogContext) {
-                      return AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: const Text(
+                        'HTTP',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: primaryBlue,
+                          letterSpacing: 0.5,
                         ),
-                        title: Row(
-                          children: const [
-                            Icon(Icons.school, color: primaryBlue),
-                            SizedBox(width: 8),
-                            Text('Informasi'),
-                          ],
-                        ),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Course Explorer v2',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tahap 5 – Loading, Success, Empty,',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1565C0),
                             ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Aplikasi pembelajaran Flutter UI Fundamentals.',
+                          ),
+                          Text(
+                            'dan Error State',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1565C0),
                             ),
-                            const Divider(height: 20),
-                            const Text(
-                              'Identitas Mahasiswa',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Text('Nama: $studentName'),
-                            Text('NIM: $studentId'),
-                            const SizedBox(height: 8),
-                            Consumer<CourseProvider>(
-                              builder: (context, state, _) {
-                                return Text(
-                                  'Favorit: ${state.favorites.length} course',
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            child: const Text('Tutup'),
                           ),
                         ],
-                      );
-                    },
-                  );
-                },
-                icon: const Icon(Icons.info_outline, size: 16),
-                label: const Text('Tampilkan Info'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Endpoint: https://\ncourse-api-pearl.vercel.app/courses',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11.5,
+                    color: Color(0xFF64748B),
+                    height: 1.3,
                   ),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: SizedBox(
+                    width: 260,
+                    child: ElevatedButton.icon(
+                      onPressed: _testNormal,
+                      icon: const Icon(Icons.cloud, size: 18),
+                      label: const Text(
+                        'Uji HTTP GET (Normal)',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1976D2),
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: SizedBox(
+                    width: 260,
+                    child: OutlinedButton.icon(
+                      onPressed: _testError,
+                      icon: const Icon(Icons.error_outline,
+                          size: 18, color: Color(0xFFE53935)),
+                      label: const Text(
+                        'Uji Error (Endpoint Salah)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Color(0xFFE53935),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                            color: Color(0xFFEF9A9A), width: 1.2),
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildTestResultBox(),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Summary Cards: Courses & Favorites
+          Row(
+            children: [
+              Expanded(
+                child: SummaryCard(
+                  title: 'Courses',
+                  value: '${courseModels.length}',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SummaryCard(
+                  title: 'Favorites',
+                  value: '${courseState.favorites.length}',
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 14),
+          const SizedBox(height: 14),
 
-        // Daftar Course Cards (sesuai gambar Course Explorer v2)
-        ...courseModels.map(
-          (course) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: CourseCard(
-              course: course,
-              onTap: () => onCourseTap(course),
-              compact: true,
+          // Judul Course Explorer
+          const Center(
+            child: Text(
+              'Course Explorer',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+
+          // Daftar Course Cards
+          if (courseModels.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'Data course belum tersedia',
+                  style: TextStyle(color: Color(0xFF64748B)),
+                ),
+              ),
+            )
+          else
+            ...courseModels.map(
+              (course) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: CourseCard(
+                  course: course,
+                  onTap: () => widget.onCourseTap(course),
+                  compact: true,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

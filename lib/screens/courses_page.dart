@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
+import '../widgets/error_view.dart';
 
 class CoursesPage extends StatelessWidget {
   final ValueChanged<Course> onCourseTap;
@@ -15,45 +15,28 @@ class CoursesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courseState = context.watch<CourseProvider>();
+    final provider = context.watch<CourseProvider>();
 
-    if (courseState.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+    // 1. Loading State
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // 2. Error State dengan widget ErrorView
+    if (provider.error != null) {
+      return ErrorView(
+        message: provider.error!,
+        onRetry: provider.loadCourses,
       );
     }
 
-    if (courseState.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 48),
-              const SizedBox(height: 12),
-              Text(
-                'Terjadi kesalahan:\n${courseState.error}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red, fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  context.read<CourseProvider>().loadCourses();
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Coba Lagi'),
-              ),
-            ],
-          ),
-        ),
-      );
+    // 3. Empty State
+    if (provider.courses.isEmpty) {
+      return const Center(child: Text('Data course belum tersedia'));
     }
 
-    final courseModels = courseState.courses.isNotEmpty
-        ? courseState.courses
-        : courses.map((json) => Course.fromJson(json)).toList();
+    // 4. Success State
+    final courseModels = provider.courses;
 
     return LayoutBuilder(
       builder: (context, constraints) {

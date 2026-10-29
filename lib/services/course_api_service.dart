@@ -12,9 +12,14 @@ class CourseApiService {
   final String baseUrl;
 
   Future<List<Course>> getCourses() async {
-    final endpoint = baseUrl.endsWith('/courses')
+    final endpoint = baseUrl.endsWith('/courses') ||
+            baseUrl.endsWith('/posts') ||
+            baseUrl.contains('invalid') ||
+            baseUrl.contains('error')
         ? baseUrl
-        : '$baseUrl/courses';
+        : baseUrl.contains('jsonplaceholder')
+            ? '$baseUrl/posts'
+            : '$baseUrl/courses';
     final response = await http.get(Uri.parse(endpoint));
 
     if (response.statusCode != 200) {

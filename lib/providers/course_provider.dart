@@ -26,13 +26,25 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 67. Kasus C: Mengelola error state jika service mengalami kendala
-  Future<void> loadCourses({bool simulateError = false}) async {
+  // 29. Penanganan state asynchronous (Loading, Success, Empty, Error)
+  bool get isEmpty => courses.isEmpty;
+  bool get hasData => courses.isNotEmpty;
+  bool get hasError => error != null;
+
+  // 67. Kasus C & Tahap 5: Mengelola state asynchronous (loading, data, error, empty)
+  Future<void> loadCourses({
+    bool simulateError = false,
+    bool simulateEmpty = false,
+  }) async {
     isLoading = true;
     error = null;
     notifyListeners();
     try {
-      courses = await repository.getCourses(simulateError: simulateError);
+      if (simulateEmpty) {
+        courses = [];
+      } else {
+        courses = await repository.getCourses(simulateError: simulateError);
+      }
     } catch (e) {
       error = e.toString();
     } finally {

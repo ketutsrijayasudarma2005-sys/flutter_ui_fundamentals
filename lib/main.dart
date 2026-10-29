@@ -21,8 +21,9 @@ Future<List<Course>> fetchCourses([String url = apiUrl]) =>
 
 void main() {
   runApp(
+    // 31. Panggil loadCourses() satu kali saat provider dibuat (..loadCourses() pada create)
     ChangeNotifierProvider<CourseProvider>(
-      create: (_) => CourseProvider(),
+      create: (_) => CourseProvider()..loadCourses(),
       child: const MyApp(),
     ),
   );
@@ -103,6 +104,7 @@ class _MainPageState extends State<MainPage> {
       HomePage(onCourseTap: openDetail),
       CoursesPage(onCourseTap: openDetail),
       FavoritesPage(onCourseTap: openDetail),
+      const ProfilePage(),
     ];
 
     return Scaffold(
@@ -177,90 +179,15 @@ class _MainPageState extends State<MainPage> {
                     selectedIcon: Icon(Icons.favorite),
                     label: Text('Favorites'),
                   ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.person_outline),
+                    selectedIcon: Icon(Icons.person),
+                    label: Text('Profile'),
+                  ),
                 ],
               ),
             Expanded(
-              child: Column(
-                children: [
-                  Consumer<CourseProvider>(
-                    builder: (context, provider, _) {
-                      if (provider.isLoading) {
-                        return Container(
-                          width: double.infinity,
-                          color: const Color(0xFFE3F2FD),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          child: const Row(
-                            children: [
-                              SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Tahap 4 Service Layer: Memuat data via CourseApiService...',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: primaryBlue,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      final isError = provider.error != null;
-                      final message = isError
-                          ? 'Error: ${provider.error}'
-                          : '200 OK (${provider.courses.length} Course dimuat via CourseApiService)';
-
-                      return Container(
-                        width: double.infinity,
-                        color: isError
-                            ? const Color(0xFFFFEBEE)
-                            : const Color(0xFFE8F5E9),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isError
-                                  ? Icons.error_outline
-                                  : Icons.check_circle_outline,
-                              size: 16,
-                              color: isError
-                                  ? Colors.red.shade700
-                                  : const Color(0xFF2E7D32),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Tahap 4 Service Layer: $message',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: isError
-                                      ? Colors.red.shade800
-                                      : const Color(0xFF1B5E20),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  Expanded(
-                    child: IndexedStack(index: selectedIndex, children: pages),
-                  ),
-                ],
-              ),
+              child: IndexedStack(index: selectedIndex, children: pages),
             ),
           ],
         ),
@@ -294,6 +221,12 @@ class _MainPageState extends State<MainPage> {
                   icon: Icon(Icons.favorite_outline, color: darkBlue),
                   selectedIcon: Icon(Icons.favorite, color: darkBlue),
                   label: 'Favorites',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline, color: darkBlue),
+                  selectedIcon: Icon(Icons.person, color: darkBlue),
+                  label: 'Profile',
+                  tooltip: '',
                 ),
               ],
             ),

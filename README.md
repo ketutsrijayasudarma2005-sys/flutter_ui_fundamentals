@@ -207,3 +207,77 @@ Screen (`MainPage`, `HomePage`, `CoursesPage`) kini hanya memanggil `CourseProvi
 
 ### 28. Menjalankan Kembali Aplikasi dan Pengujian
 Seluruh pengujian (`test/tahap2_http_test.dart`, `test/tahap3_model_test.dart`, `test/tahap4_service_test.dart`, dan `test/widget_test.dart`) berhasil dijalankan dengan hasil **100% lulus (All tests passed)**.
+
+---
+
+## Tahap 5 — Loading, Success, Empty, dan Error State
+
+Request jaringan bersifat asynchronous sehingga UI harus memiliki penanganan state yang eksplisit:
+1. **Loading** → Menampilkan progress indicator (`CircularProgressIndicator`).
+2. **Success** → Menampilkan daftar data course yang berhasil dimuat.
+3. **Empty** → Menampilkan pesan informatif bahwa data course belum tersedia (`Data course belum tersedia`).
+4. **Error** → Menampilkan pesan kesalahan dan tombol retry melalui widget `ErrorView`.
+
+```dart
+final provider = context.watch<CourseProvider>();
+
+if (provider.isLoading) {
+  return const Center(child: CircularProgressIndicator());
+}
+
+if (provider.error != null) {
+  return ErrorView(
+    message: provider.error!,
+    onRetry: provider.loadCourses,
+  );
+}
+
+if (provider.courses.isEmpty) {
+  return const Center(child: Text('Data course belum tersedia'));
+}
+```
+
+### 29. Perluasan `CourseProvider`
+[lib/providers/course_provider.dart](file:///c:/src/flutter_ui_fundamentals/lib/providers/course_provider.dart) mempertahankan field `courses`, `isLoading`, dan `error`, serta ditambahkan helper:
+- `bool get isEmpty => courses.isEmpty;`
+- `bool get hasData => courses.isNotEmpty;`
+- `bool get hasError => error != null;`
+- Dukungan parameter `simulateEmpty: true` untuk pengujian Empty State.
+
+### 30. Pembuatan Widget `ErrorView`
+File baru [lib/widgets/error_view.dart](file:///c:/src/flutter_ui_fundamentals/lib/widgets/error_view.dart) dibuat untuk menampilkan icon peringatan, judul `Terjadi kesalahan:`, detail pesan error, dan tombol retry (`Coba Lagi`):
+```dart
+class ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  final String retryLabel;
+
+  const ErrorView({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    this.retryLabel = 'Coba Lagi',
+  });
+...
+```
+
+### 31. Pemanggilan `loadCourses()` Sekali Saat Inisialisasi
+Pada [lib/main.dart](file:///c:/src/flutter_ui_fundamentals/lib/main.dart), pemanggilan `loadCourses()` dilakukan sekali saat provider dibuat menggunakan cascade notation:
+```dart
+ChangeNotifierProvider<CourseProvider>(
+  create: (_) => CourseProvider()..loadCourses(),
+  child: const MyApp(),
+)
+```
+Pemanggilan dipastikan tidak pernah diletakkan di dalam fungsi `build()` agar tidak terjadi infinite request loop.
+
+### 32. Simulasi Endpoint Salah & Dokumentasi Error UI
+- **Skenario:** Endpoint diubah sementara menjadi salah (misal: `https://course-api-pearl.vercel.app/endpoint_salah` atau `simulateError: true`).
+- **Respon Backend:** HTTP 404 / Exception.
+- **Tampilan UI:** 
+  - `CoursesPage` langsung menampilkan widget `ErrorView` berwarna merah dengan icon error, teks `Terjadi kesalahan:\nException: Gagal mengambil course`, dan tombol `Coba Lagi`.
+  - Banner status di bagian atas menampilkan status merah `Error: Exception: Gagal mengambil course`.
+
+### 33. Kembalikan Endpoint Benar dan Refresh
+- **Aksi:** Endpoint dikembalikan ke URL valid (`https://course-api-pearl.vercel.app/courses`) dan tombol `Coba Lagi` ditekan.
+- **Hasil:** UI segera bertransisi dari Error State ke Loading State (`CircularProgressIndicator`), lalu masuk ke **Success State** dengan menampilkan seluruh card course secara responsif.

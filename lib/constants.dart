@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 const String studentName = 'I Ketut Srijaya Sudarma';
 const String studentId = '2415051063';
+const String studentClass = 'PTI 5A';
 
 // 13. Konstanta baseUrl & apiUrl sesuai endpoint latihan
 const String baseUrl = 'https://course-api-pearl.vercel.app';
