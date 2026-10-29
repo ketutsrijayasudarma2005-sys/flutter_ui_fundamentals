@@ -13,6 +13,8 @@ import 'screens/favorites_page.dart';
 import 'screens/home_page.dart';
 import 'screens/profile_page.dart';
 import 'services/course_api_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/supabase_config.dart';
 
 export 'constants.dart';
 export 'services/course_api_service.dart';
@@ -22,12 +24,19 @@ export 'services/course_api_service.dart';
 Future<List<Course>> fetchCourses([String url = apiUrl]) =>
     CourseApiService(url).getCourses();
 
-void main() {
-  // 55. Rakit service -> repository -> provider; hanya baris ini yang berubah ketika sumber data diganti
-  final repository = CourseRepository(CourseApiService(apiBaseUrl));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: SupabaseConfig.supabaseUrl,
+    publishableKey: SupabaseConfig.supabaseAnonKey,
+  );
+
+  final repository = CourseRepository(
+    CourseApiService(apiBaseUrl),
+  );
 
   runApp(
-    // 31. Panggil loadCourses() satu kali saat provider dibuat (..loadCourses() pada create)
     ChangeNotifierProvider<CourseProvider>(
       create: (_) => CourseProvider(repository)..loadCourses(),
       child: const MyApp(),
