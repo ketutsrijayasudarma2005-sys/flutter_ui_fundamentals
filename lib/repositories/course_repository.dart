@@ -1,30 +1,27 @@
 import '../models/course.dart';
-import '../services/course_api_service.dart';
+import '../services/course_data_source.dart';
 
+// 53. Repository menggunakan CourseDataSource sebagai abstraksi sumber data
 class CourseRepository {
-  final CourseApiService service;
+  CourseRepository(this.dataSource);
 
-  CourseRepository(this.service);
+  final CourseDataSource dataSource;
+
+  CourseDataSource get service => dataSource;
 
   Future<List<Course>> getCourses({bool simulateError = false}) {
     if (simulateError) {
       throw Exception('Gagal memuat data dari CourseApiService (Simulasi Kasus C)');
     }
-    return service.getCourses();
+    return dataSource.getCourses();
   }
 
-  // Tahap 6: 36. Kirim data dengan POST melalui CourseApiService -> CourseRepository -> CourseProvider
-  Future<Course> createCourse(Course course) {
-    return service.createCourse(course);
-  }
+  Future<Course> createCourse(Course course) =>
+      dataSource.createCourse(course);
 
-  // Tahap 7: 43. Kirim perubahan menggunakan PUT/PATCH melalui CourseRepository
-  Future<void> updateCourse(int id, Course course) {
-    return service.updateCourse(id, course);
-  }
+  Future<void> updateCourse(int id, Course course) =>
+      dataSource.updateCourse(id, course);
 
-  // Tahap 8: Menghapus course
-  Future<void> deleteCourse(int id) {
-    return service.deleteCourse(id);
-  }
+  Future<void> deleteCourse(int id) =>
+      dataSource.deleteCourse(id);
 }

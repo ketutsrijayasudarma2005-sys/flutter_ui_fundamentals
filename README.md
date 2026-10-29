@@ -386,4 +386,78 @@ sebelum context digunakan untuk menampilkan `SnackBar` maupun navigasi.
 ### 51. Pembersihan Otomatis dari Favorites (Mencegah Data Yatim)
 Sebelum atau saat course dihapus dari backend, `CourseProvider.deleteCourse` memeriksa apakah course tersebut tercatat dalam himpunan `favorites`. Jika ada, kode course dihapus dari `favorites` (`favorites.remove(code)`), sehingga tidak tersisa data yatim pada daftar favorit.
 
+---
+
+## Tahap 9 — Repository Pattern untuk REST API
+
+Menerapkan Repository Pattern sebagai kontrak abstraksi antara data source dan state layer:
+`Presentation (Screen/Form) -> State/Controller (Provider) -> Repository -> Data Source Contract (CourseDataSource) -> CourseApiService -> Backend`.
+
+### 52. Kontrak Sumber Data `CourseDataSource`
+Membuat file baru [lib/services/course_data_source.dart](file:///c:/src/flutter_ui_fundamentals/lib/services/course_data_source.dart) berupa abstract class:
+```dart
+abstract class CourseDataSource {
+  Future<List<Course>> getCourses();
+  Future<Course> createCourse(Course course);
+  Future<void> updateCourse(int id, Course course);
+  Future<void> deleteCourse(int id);
+}
+```
+Dan mengubah deklarasi [lib/services/course_api_service.dart](file:///c:/src/flutter_ui_fundamentals/lib/services/course_api_service.dart) menjadi:
+```dart
+class CourseApiService implements CourseDataSource {
+  ...
+}
+```
+
+### 53. Pembaruan `CourseRepository`
+Dependency pada [lib/repositories/course_repository.dart](file:///c:/src/flutter_ui_fundamentals/lib/repositories/course_repository.dart) diubah dari implementasi konkret menjadi abstraksi `CourseDataSource`:
+```dart
+class CourseRepository {
+  CourseRepository(this.dataSource);
+
+  final CourseDataSource dataSource;
+
+  Future<List<Course>> getCourses({bool simulateError = false}) {
+    if (simulateError) {
+      throw Exception('Gagal memuat data dari CourseApiService (Simulasi Kasus C)');
+    }
+    return dataSource.getCourses();
+  }
+
+  Future<Course> createCourse(Course course) =>
+      dataSource.createCourse(course);
+
+  Future<void> updateCourse(int id, Course course) =>
+      dataSource.updateCourse(id, course);
+
+  Future<void> deleteCourse(int id) =>
+      dataSource.deleteCourse(id);
+}
+```
+
+### 54. Isolasi `CourseProvider`
+`CourseProvider` hanya menerima `CourseRepository` melalui konstruktor dan hanya berkomunikasi melalui method repository tanpa mengetahui sumber data sebenarnya (REST API, cache, atau mock).
+
+### 55. Perakitan Komponen di `main.dart`
+Perakitan `service -> repository -> provider` dilakukan di [lib/main.dart](file:///c:/src/flutter_ui_fundamentals/lib/main.dart):
+```dart
+final repository = CourseRepository(CourseApiService(apiBaseUrl));
+
+runApp(
+  ChangeNotifierProvider<CourseProvider>(
+    create: (_) => CourseProvider(repository)..loadCourses(),
+    child: const MyApp(),
+  ),
+);
+```
+Dengan struktur ini, ketika sumber data diganti (misalnya ke Cache atau Local Database), hanya baris inisialisasi tersebut yang perlu diubah.
+
+### 56. Pembersihan Import HTTP
+Dipastikan tidak ada `import 'package:http/http.dart'` pada screen maupun provider. Package `http` hanya diimpor di `CourseApiService`.
+
+### 57. Pengujian Menyeluruh
+Seluruh operasi CRUD (GET, POST, UPDATE, DELETE) telah diuji dan berhasil dijalankan melalui kontrak Repository Pattern.
+
+
 

@@ -4,8 +4,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/course.dart';
+import 'course_data_source.dart';
 
-class CourseApiService {
+// 52. CourseApiService implements CourseDataSource
+class CourseApiService implements CourseDataSource {
   CourseApiService([String? baseUrl])
       : baseUrl = baseUrl ?? 'https://course-api-pearl.vercel.app';
 

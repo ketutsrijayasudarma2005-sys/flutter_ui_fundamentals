@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'constants.dart';
 import 'models/course.dart';
 import 'providers/course_provider.dart';
+import 'repositories/course_repository.dart';
 import 'screens/add_course_page.dart';
 import 'screens/course_detail_page.dart';
 import 'screens/edit_course_page.dart';
@@ -22,10 +23,13 @@ Future<List<Course>> fetchCourses([String url = apiUrl]) =>
     CourseApiService(url).getCourses();
 
 void main() {
+  // 55. Rakit service -> repository -> provider; hanya baris ini yang berubah ketika sumber data diganti
+  final repository = CourseRepository(CourseApiService(apiBaseUrl));
+
   runApp(
     // 31. Panggil loadCourses() satu kali saat provider dibuat (..loadCourses() pada create)
     ChangeNotifierProvider<CourseProvider>(
-      create: (_) => CourseProvider()..loadCourses(),
+      create: (_) => CourseProvider(repository)..loadCourses(),
       child: const MyApp(),
     ),
   );
