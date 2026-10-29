@@ -25,9 +25,12 @@ void main() {
       expect(service, isA<CourseDataSource>());
     });
 
-    test('71b. Method deleteCourse sementara melempar UnimplementedError', () {
+    test('71b. CourseSupabaseService mengimplementasikan seluruh kontrak CourseDataSource', () {
       final service = CourseSupabaseService();
-      expect(() => service.deleteCourse(1), throwsA(isA<UnimplementedError>()));
+      expect(service.getCourses, isA<Function>());
+      expect(service.createCourse, isA<Function>());
+      expect(service.updateCourse, isA<Function>());
+      expect(service.deleteCourse, isA<Function>());
     });
 
     test('72 & 73. Mapping response dari Supabase ke List<Course>', () {

@@ -591,6 +591,36 @@ Signature method `Future<void> updateCourse(int id, Course course)` sama persis 
 ### 85. Verifikasi Perubahan
 Perubahan data diverifikasi langsung pada antarmuka aplikasi (`HomePage`, `CoursesPage`, `DetailPage`) dan tersimpan secara persisten pada tabel database Supabase.
 
+---
+
+## Tahap 15 — DELETE: Menghapus Data dari Database (Supabase)
+
+### 86. Dialog Konfirmasi Penghapusan
+Pada halaman detail ([lib/screens/course_detail_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/course_detail_page.dart)), ketika tombol "Hapus Course" ditekan, aplikasi memunculkan `AlertDialog` konfirmasi ("Konfirmasi Hapus") dengan opsi:
+- **Batal:** Membatalkan aksi penghapusan.
+- **Hapus:** Melanjutkan proses penghapusan data secara permanen dari database.
+
+### 87. DELETE Berdasarkan ID
+Mengganti stub `deleteCourse` pada [lib/services/course_supabase_service.dart](file:///c:/src/flutter_ui_fundamentals/lib/services/course_supabase_service.dart) dengan pemanggilan query delete:
+```dart
+@override
+Future<void> deleteCourse(int id) async {
+  await supabase
+      .from('courses')
+      .delete()
+      .eq('id', id);
+}
+```
+Signature `Future<void> deleteCourse(int id)` sesuai dengan kontrak `CourseDataSource`.
+
+### 88. Refresh List Otomatis
+Setelah penghapusan berhasil melalui `CourseProvider.deleteCourse(id)`, pemanggilan `await loadCourses()` otomatis dijalankan untuk me-refresh data course pada aplikasi secara real-time.
+
+### 89. Verifikasi Data Hilang dari UI dan Database
+- **Aplikasi:** Data yang dihapus tidak lagi tampil pada `HomePage`, `CoursesPage`, dan `FavoritesPage`. SnackBar "Course berhasil dihapus!" ditampilkan kepada pengguna.
+- **Database Supabase:** Baris data dengan `id` terkait terhapus secara permanen dari tabel `courses`.
+
+
 
 
 

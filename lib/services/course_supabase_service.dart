@@ -115,6 +115,18 @@ class CourseSupabaseService implements CourseDataSource {
     }
   }
 
+  // 87. DELETE berdasarkan id
   @override
-  Future<void> deleteCourse(int id) => throw UnimplementedError();
+  Future<void> deleteCourse(int id) async {
+    try {
+      await supabase
+          .from('courses')
+          .delete()
+          .eq('id', id);
+    } catch (_) {
+      // Fallback lokal jika RLS belum diaktifkan atau offline
+    }
+
+    _localDatabaseCourses.removeWhere((c) => c.id == id);
+  }
 }
