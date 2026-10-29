@@ -459,5 +459,72 @@ Dipastikan tidak ada `import 'package:http/http.dart'` pada screen maupun provid
 ### 57. Pengujian Menyeluruh
 Seluruh operasi CRUD (GET, POST, UPDATE, DELETE) telah diuji dan berhasil dijalankan melalui kontrak Repository Pattern.
 
+---
+
+## Tahap 12 — SELECT: Membaca Data dari Database (Supabase)
+
+### 71. Membuat `lib/services/course_supabase_service.dart`
+Membuat class `CourseSupabaseService` yang mengimplementasikan `CourseDataSource`. Untuk method yang belum diimplementasikan (`createCourse`, `updateCourse`, `deleteCourse`), sementara melempar `UnimplementedError()`:
+```dart
+class CourseSupabaseService implements CourseDataSource {
+  CourseSupabaseService([SupabaseClient? client]) : _client = client;
+
+  final SupabaseClient? _client;
+
+  SupabaseClient get supabase => _client ?? Supabase.instance.client;
+
+  @override
+  Future<List<Course>> getCourses() async {
+    final data = await supabase
+        .from('courses')
+        .select()
+        .order('id');
+
+    return (data as List)
+        .map((e) => Course.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  // Sementara, agar kelas tetap dapat dikompilasi:
+  @override
+  Future<Course> createCourse(Course course) => throw UnimplementedError();
+
+  @override
+  Future<void> updateCourse(int id, Course course) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteCourse(int id) => throw UnimplementedError();
+}
+```
+
+### 72 & 73. Query Data dari Tabel `courses` dan Konversi Response ke `List<Course>`
+Mengambil data dari tabel `courses` di Supabase dengan method:
+```dart
+final data = await supabase
+    .from('courses')
+    .select()
+    .order('id');
+```
+Kemudian response dikonversi menjadi `List<Course>` melalui factory constructor `Course.fromJson`:
+```dart
+return (data as List)
+    .map((e) => Course.fromJson(e as Map<String, dynamic>))
+    .toList();
+```
+
+### 74. Menampilkan Data pada ListView/GridView
+Mengintegrasikan `CourseSupabaseService` ke dalam `CourseRepository` dan `CourseProvider`. Pada [lib/main.dart](file:///c:/src/flutter_ui_fundamentals/lib/main.dart):
+```dart
+final repository = CourseRepository(CourseSupabaseService());
+```
+Data course dari Supabase ditampilkan secara responsif pada `GridView.builder` di `CoursesPage` dan `ListView` di `HomePage`.
+
+### 75. Memastikan Identitas Mahasiswa Tetap Tampil
+Identitas mahasiswa tetap dipertahankan dan ditampilkan pada header `HomePage` dan `ProfilePage`:
+- **Nama:** I Ketut Srijaya Sudarma
+- **NIM:** 2415051063
+- **Kelas:** PTI 5A
+
+
 
 

@@ -13,11 +13,15 @@ import 'screens/favorites_page.dart';
 import 'screens/home_page.dart';
 import 'screens/profile_page.dart';
 import 'services/course_api_service.dart';
+import 'services/course_data_source.dart';
+import 'services/course_supabase_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
 
 export 'constants.dart';
 export 'services/course_api_service.dart';
+export 'services/course_data_source.dart';
+export 'services/course_supabase_service.dart';
 
 // 26. Seluruh kode GET telah dipindahkan ke CourseApiService.
 // Fungsi fetchCourses didelegasikan ke CourseApiService untuk kompatibilitas pengujian
@@ -28,12 +32,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: SupabaseConfig.supabaseUrl,
+    url: SupabaseConfig.normalizedUrl,
     publishableKey: SupabaseConfig.supabaseAnonKey,
   );
 
+  // 55 & 74. Rakit service -> repository -> provider (CourseSupabaseService untuk database)
   final repository = CourseRepository(
-    CourseApiService(apiBaseUrl),
+    CourseSupabaseService(),
   );
 
   runApp(
