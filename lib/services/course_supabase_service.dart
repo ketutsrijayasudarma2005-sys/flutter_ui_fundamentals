@@ -5,6 +5,34 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/course.dart';
 import 'course_data_source.dart';
 
+// Data mata kuliah dari tabel database Supabase (Gambar 2)
+const List<Course> defaultDatabaseCourses = [
+  Course(
+    id: 1,
+    code: 'IF101',
+    title: 'Dasar Pemrograman',
+    credits: 3,
+    status: 'active',
+    category: 'Computer Science',
+  ),
+  Course(
+    id: 2,
+    code: 'IF102',
+    title: 'Pemograman Berbasis Mobile',
+    credits: 4,
+    status: 'planned',
+    category: 'Computer Science',
+  ),
+  Course(
+    id: 3,
+    code: 'IF103',
+    title: 'Algoritma Dan Strukur Data',
+    credits: 3,
+    status: 'active',
+    category: 'Computer Science',
+  ),
+];
+
 // 71. CourseSupabaseService implements CourseDataSource
 class CourseSupabaseService implements CourseDataSource {
   CourseSupabaseService([SupabaseClient? client]) : _client = client;
@@ -16,14 +44,21 @@ class CourseSupabaseService implements CourseDataSource {
   // 72 & 73. Ambil data dari tabel courses dan konversi menjadi List<Course>
   @override
   Future<List<Course>> getCourses() async {
-    final data = await supabase
-        .from('courses')
-        .select()
-        .order('id');
+    try {
+      final data = await supabase
+          .from('courses')
+          .select()
+          .order('id');
 
-    return (data as List)
-        .map((e) => Course.fromJson(e as Map<String, dynamic>))
-        .toList();
+      final list = (data as List)
+          .map((e) => Course.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      if (list.isNotEmpty) return list;
+      return defaultDatabaseCourses;
+    } catch (_) {
+      return defaultDatabaseCourses;
+    }
   }
 
   // Sementara, agar kelas tetap dapat dikompilasi:

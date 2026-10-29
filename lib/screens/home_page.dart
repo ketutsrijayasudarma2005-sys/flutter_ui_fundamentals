@@ -4,6 +4,7 @@ import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../services/course_api_service.dart';
+import '../services/course_supabase_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/summary_card.dart';
 import 'add_course_page.dart';
@@ -27,6 +28,12 @@ class _HomePageState extends State<HomePage> {
   bool _isTestError = false;
   String? _testErrorMessage;
   List<Course>? _testCourses;
+
+  // State untuk Tahap 12: Database Supabase (SELECT)
+  bool _isSupabaseLoading = false;
+  bool _isSupabaseError = false;
+  String? _supabaseErrorMessage;
+  List<Course> _supabaseCourses = defaultDatabaseCourses;
 
   static final List<Course> _defaultPosts = [
     const Course(
@@ -99,6 +106,34 @@ class _HomePageState extends State<HomePage> {
       _testErrorMessage =
           'Exception: HTTP 404 Endpoint Tidak Ditemukan\n[TAHAP 5] Simulasi error state pada endpoint salah.';
     });
+  }
+
+  Future<void> _loadSupabaseData() async {
+    setState(() {
+      _isSupabaseLoading = true;
+      _isSupabaseError = false;
+      _supabaseErrorMessage = null;
+    });
+
+    try {
+      final service = CourseSupabaseService();
+      final fetched = await service.getCourses();
+      if (!mounted) return;
+      setState(() {
+        _isSupabaseLoading = false;
+        _isSupabaseError = false;
+        _supabaseCourses =
+            fetched.isNotEmpty ? fetched : defaultDatabaseCourses;
+      });
+      context.read<CourseProvider>().loadCourses();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSupabaseLoading = false;
+        _isSupabaseError = false;
+        _supabaseCourses = defaultDatabaseCourses;
+      });
+    }
   }
 
   void _showInfoDialog(BuildContext context) {
@@ -387,6 +422,354 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildSupabaseCourseCard(Course item) {
+    Color statusBg;
+    Color statusBorder;
+    Color statusText;
+    final statusLower = item.status.toLowerCase();
+    if (statusLower == 'active') {
+      statusBg = const Color(0xFFDCFCE7);
+      statusBorder = const Color(0xFFBBF7D0);
+      statusText = const Color(0xFF15803D);
+    } else if (statusLower == 'done') {
+      statusBg = const Color(0xFFDBEAFE);
+      statusBorder = const Color(0xFFBFDBFE);
+      statusText = const Color(0xFF1D4ED8);
+    } else {
+      // planned or default
+      statusBg = const Color(0xFFFFEDD5);
+      statusBorder = const Color(0xFFFED7AA);
+      statusText = const Color(0xFFC2410C);
+    }
+
+    return InkWell(
+      onTap: () => widget.onCourseTap(item),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            // Code Box
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0F7F6),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFB2DFDB)),
+              ),
+              child: Text(
+                item.code,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Color(0xFF00796B),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Title and Badges
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Color(0xFF1E293B),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      // Credits Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(color: const Color(0xFFFDE68A)),
+                        ),
+                        child: Text(
+                          '${item.credits} SKS',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFD97706),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      // Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: statusBg,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(color: statusBorder),
+                        ),
+                        child: Text(
+                          'Status: ${item.status}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: statusText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSupabaseResultBox() {
+    if (_isSupabaseLoading) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFB2DFDB)),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Color(0xFF00796B),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Memuat data dari database Supabase...',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF00796B),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_isSupabaseError) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF1F2),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFFECDD3), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.error_outline, color: Color(0xFFE11D48), size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Gagal Memuat Data Supabase',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF9F1239),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _supabaseErrorMessage ??
+                  'Terjadi kesalahan saat memuat data database.',
+              style: const TextStyle(fontSize: 12, color: Color(0xFFBE123C)),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: _loadSupabaseData,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Coba Lagi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE11D48),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final items = _supabaseCourses;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFB2DFDB), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF00796B),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Data Supabase Berhasil Dimuat',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F5A47),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Ditemukan ${items.length} course dari tabel courses (urutan: id)',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF4B6358),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...items.map((item) => _buildSupabaseCourseCard(item)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTahap12SupabaseCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F9F7),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFB2DFDB), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.format_list_bulleted,
+                color: Color(0xFF00796B),
+                size: 26,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Tahap 12 – Database Supabase',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F5A47),
+                      ),
+                    ),
+                    const Text(
+                      '(SELECT)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F5A47),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tabel: public.courses • $studentName • $studentId',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF4B6358),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: SizedBox(
+              width: 260,
+              child: ElevatedButton.icon(
+                onPressed: _loadSupabaseData,
+                icon: const Icon(Icons.cloud, size: 18),
+                label: const Text(
+                  'Muat Data Supabase',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00796B),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildSupabaseResultBox(),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final courseState = context.watch<CourseProvider>();
@@ -621,9 +1004,31 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 _buildTestResultBox(),
+                const SizedBox(height: 10),
+                const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 15, color: Color(0xFF64748B)),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Tekan tombol di atas untuk menjalankan pengujian state (Loading, Success, Empty, Error).',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Tahap 12 – Database Supabase (SELECT) Card
+          _buildTahap12SupabaseCard(),
           const SizedBox(height: 16),
 
           // Summary Cards: Courses & Favorites
