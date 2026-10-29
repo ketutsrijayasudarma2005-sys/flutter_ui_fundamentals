@@ -74,6 +74,26 @@ class CourseProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Tahap 7: 43. Kirim perubahan menggunakan PUT/PATCH melalui CourseRepository
+  // 44. Terapkan guard submit ganda (isSaving)
+  // 45. Refresh data setelah update
+  Future<void> updateCourse(int id, Course course) async {
+    isSaving = true;
+    error = null;
+    notifyListeners();
+    try {
+      await repository.updateCourse(id, course);
+      await loadCourses();
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
 }
 
 typedef CourseState = CourseProvider;

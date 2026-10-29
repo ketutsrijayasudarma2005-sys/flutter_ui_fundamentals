@@ -323,3 +323,31 @@ if (!context.mounted) return;
 
 ### 40. Refresh List Otomatis
 Setelah penambahan data berhasil, `CourseProvider` otomatis memanggil `await loadCourses()` untuk memperbarui seluruh daftar course dari backend (mengganti isi list, bukan sekadar append lokal).
+
+---
+
+## Tahap 7 — HTTP PUT/PATCH: Memperbarui Resource
+
+Menambahkan fitur pembaruan resource data course yang ada melalui metode HTTP PUT dengan arsitektur berlapis:
+`Presentation (Screen/Form) -> State/Controller (Provider) -> Repository -> Service/Data Source -> Backend`.
+
+### 41. Tombol Edit pada Course Detail
+Pada [lib/screens/course_detail_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/course_detail_page.dart), ditambahkan tombol `Edit Course` pada AppBar (`IconButton`) dan di bawah detail card (`ElevatedButton.icon`) yang mengarahkan pengguna ke halaman edit.
+
+### 42. Form Edit dengan Data Lama & Field Code Read-Only
+File baru [lib/screens/edit_course_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/edit_course_page.dart) dibuat untuk memfasilitasi pengeditan:
+- Mengisi controller form dengan data course lama (`title`, `credits`, `status`).
+- Field `code` dibuat **read-only** (`readOnly: true`) dengan tampilan terkunci karena dipakai sebagai kunci favorites pada state management.
+
+### 43. Pengiriman Perubahan via PUT Melalui Service Layer
+- `CourseApiService.updateCourse(int id, Course course)` melakukan request `http.put` ke endpoint `$baseUrl/courses/$id` dengan header `Content-Type: application/json` dan body `jsonEncode(course.toJson())`.
+- Method melempar `Exception('Gagal memperbarui course')` jika status code bukan 2xx (status < 200 atau >= 300).
+- Pemanggilan diteruskan secara berurutan: `EditCoursePage -> CourseProvider -> CourseRepository -> CourseApiService`.
+
+### 44. Guard Submit Ganda & Pemeriksaan `context.mounted`
+- Tombol `Simpan Perubahan` dinonaktifkan dan menampilkan `CircularProgressIndicator` saat request update berjalan (`isSaving`).
+- Pemeriksaan keamanan `if (!context.mounted) return;` dilakukan setelah `await` sebelum menampilkan `SnackBar` atau menutup dialog/halaman melalui `Navigator.pop()`.
+
+### 45. Refresh Data Otomatis & Tampilan Hasil
+Setelah request PUT berhasil, `CourseProvider` memanggil `await loadCourses()` untuk me-refresh data course dari backend. Halaman `CourseDetailPage` yang mengamati `CourseProvider` otomatis terbarui secara reaktif, dan `SnackBar` hijau ditampilkan sebagai feedback keberhasilan.
+

@@ -17,4 +17,9 @@ class CourseRepository {
   Future<Course> createCourse(Course course) {
     return service.createCourse(course);
   }
+
+  // Tahap 7: 43. Kirim perubahan menggunakan PUT/PATCH melalui CourseRepository
+  Future<void> updateCourse(int id, Course course) {
+    return service.updateCourse(id, course);
+  }
 }

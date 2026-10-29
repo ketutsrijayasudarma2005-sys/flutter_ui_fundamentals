@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import 'edit_course_page.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final Course course;
@@ -14,12 +15,30 @@ class CourseDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courseCode = course.code;
+    final provider = context.watch<CourseProvider>();
+    final activeCourse = provider.courses.firstWhere(
+      (c) => c.code == course.code,
+      orElse: () => course,
+    );
+    final courseCode = activeCourse.code;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Detail'),
         actions: [
+          // 41. Tombol Edit pada Course Detail
+          IconButton(
+            tooltip: 'Edit Course',
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditCoursePage(course: activeCourse),
+                ),
+              );
+            },
+          ),
           Consumer<CourseProvider>(
             builder: (context, state, child) {
               final isFavorite = state.isFavorite(courseCode);
@@ -62,7 +81,7 @@ class CourseDetailPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        course.title,
+                        activeCourse.title,
                         style: const TextStyle(
                           color: darkBlue,
                           fontSize: 25,
@@ -83,13 +102,13 @@ class CourseDetailPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Text('Kode: ${course.code}'),
+                Text('Kode: ${activeCourse.code}'),
                 const SizedBox(height: 10),
-                Text('SKS: ${course.credits}'),
+                Text('SKS: ${activeCourse.credits}'),
                 const SizedBox(height: 10),
-                Text('Status: ${course.status}'),
+                Text('Status: ${activeCourse.status}'),
                 const SizedBox(height: 10),
-                Text('Kategori: ${course.category}'),
+                Text('Kategori: ${activeCourse.category}'),
                 const SizedBox(height: 10),
                 // 56. Tampilkan status favorite pada DetailPage
                 Consumer<CourseProvider>(
@@ -156,6 +175,27 @@ class CourseDetailPage extends StatelessWidget {
                       ),
                     );
                   },
+                ),
+                const SizedBox(height: 12),
+                // 41. Tombol Edit pada Course Detail
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditCoursePage(course: activeCourse),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Edit Course'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),

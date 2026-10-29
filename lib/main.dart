@@ -6,6 +6,7 @@ import 'models/course.dart';
 import 'providers/course_provider.dart';
 import 'screens/add_course_page.dart';
 import 'screens/course_detail_page.dart';
+import 'screens/edit_course_page.dart';
 import 'screens/courses_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/home_page.dart';
