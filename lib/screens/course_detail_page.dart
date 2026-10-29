@@ -13,6 +13,82 @@ class CourseDetailPage extends StatelessWidget {
     required this.course,
   });
 
+  // Tahap 8: 47. Tampilkan AlertDialog konfirmasi sebelum menghapus
+  // 48. Jalankan DELETE setelah user menyetujui
+  // 49. Refresh list dan tampilkan SnackBar
+  // 50. Periksa context.mounted sebelum menampilkan SnackBar / pop
+  // 51. Pembersihan favorites ditangani oleh deleteCourse pada CourseProvider
+  Future<void> _confirmDelete(BuildContext context, Course activeCourse) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Konfirmasi Hapus'),
+            ],
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus course "${activeCourse.title}" (${activeCourse.code})?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        final courseId = activeCourse.id ?? 1;
+        await context.read<CourseProvider>().deleteCourse(
+              courseId,
+              code: activeCourse.code,
+            );
+
+        // 50. Setelah dialog dan await DELETE, periksa context.mounted
+        if (!context.mounted) return;
+
+        // 49. Tampilkan SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Course berhasil dihapus!'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        Navigator.pop(context);
+      } catch (e) {
+        if (!context.mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus course: $e'),
+            backgroundColor: Colors.red.shade800,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
@@ -38,6 +114,12 @@ class CourseDetailPage extends StatelessWidget {
                 ),
               );
             },
+          ),
+          // 46. Tombol Delete pada AppBar
+          IconButton(
+            tooltip: 'Hapus Course',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _confirmDelete(context, activeCourse),
           ),
           Consumer<CourseProvider>(
             builder: (context, state, child) {
@@ -194,6 +276,22 @@ class CourseDetailPage extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryBlue,
                       foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 46. Tombol Delete pada Course Detail
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmDelete(context, activeCourse),
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    label: const Text(
+                      'Hapus Course',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
                     ),
                   ),
                 ),

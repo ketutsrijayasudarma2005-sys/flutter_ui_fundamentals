@@ -67,4 +67,18 @@ class CourseApiService {
       throw Exception('Gagal memperbarui course');
     }
   }
+
+  // Tahap 8: HTTP DELETE: Menghapus Resource
+  Future<void> deleteCourse(int id) async {
+    final endpoint = baseUrl.endsWith('/courses')
+        ? '$baseUrl/$id'
+        : '$baseUrl/courses/$id';
+    final response = await http.delete(
+      Uri.parse(endpoint),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Gagal menghapus course');
+    }
+  }
 }

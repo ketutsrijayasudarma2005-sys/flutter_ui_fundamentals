@@ -351,3 +351,39 @@ File baru [lib/screens/edit_course_page.dart](file:///c:/src/flutter_ui_fundamen
 ### 45. Refresh Data Otomatis & Tampilan Hasil
 Setelah request PUT berhasil, `CourseProvider` memanggil `await loadCourses()` untuk me-refresh data course dari backend. Halaman `CourseDetailPage` yang mengamati `CourseProvider` otomatis terbarui secara reaktif, dan `SnackBar` hijau ditampilkan sebagai feedback keberhasilan.
 
+---
+
+## Tahap 8 — HTTP DELETE: Menghapus Resource
+
+Menambahkan fitur penghapusan resource data course menggunakan HTTP DELETE dengan konfirmasi dialog dan pembersihan data relasional (favorites):
+`Presentation (Screen/Dialog) -> State/Controller (Provider) -> Repository -> Service/Data Source -> Backend`.
+
+### 46. Tombol Delete pada UI
+Pada [lib/screens/course_detail_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/course_detail_page.dart), ditambahkan tombol `Hapus Course` pada AppBar (`IconButton`) dan tombol outline berwarna merah pada card detail.
+
+### 47. AlertDialog Konfirmasi Sebelum Menghapus
+Sebelum request DELETE dikirimkan, aplikasi menampilkan `AlertDialog` konfirmasi berisi:
+- Judul: `Konfirmasi Hapus` dengan icon peringatan.
+- Konten: Pertanyaan konfirmasi menghapus course bersangkutan (`Apakah Anda yakin ingin menghapus course ...?`).
+- Aksi: Tombol `Batal` (menutup dialog tanpa menghapus) dan tombol merah `Hapus` (menyetujui penghapusan).
+
+### 48. Eksekusi Request DELETE Setelah Persetujuan Pengguna
+Jika user menekan tombol `Hapus`, request dikirim melalui:
+1. `CourseApiService.deleteCourse(int id)` melakukan request `http.delete` ke endpoint `$baseUrl/courses/$id`.
+2. Method memeriksa status respons (sukses jika status >= 200 dan < 300; selain itu melempar exception).
+3. Pemanggilan diteruskan melalui `CourseRepository.deleteCourse(id)` dan `CourseProvider.deleteCourse(id)`.
+
+### 49. Refresh List dan Feedback SnackBar
+Setelah penghapusan sukses, `CourseProvider` otomatis memanggil `await loadCourses()` untuk me-refresh data course dari backend, dan `SnackBar` merah ditampilkan bertuliskan `Course berhasil dihapus!`. Halaman detail kemudian ditutup dengan `Navigator.pop(context)` untuk kembali ke daftar course.
+
+### 50. Pemeriksaan `context.mounted`
+Pemeriksaan keamanan dilakukan setelah proses async `showDialog` dan `await deleteCourse`:
+```dart
+if (!context.mounted) return;
+```
+sebelum context digunakan untuk menampilkan `SnackBar` maupun navigasi.
+
+### 51. Pembersihan Otomatis dari Favorites (Mencegah Data Yatim)
+Sebelum atau saat course dihapus dari backend, `CourseProvider.deleteCourse` memeriksa apakah course tersebut tercatat dalam himpunan `favorites`. Jika ada, kode course dihapus dari `favorites` (`favorites.remove(code)`), sehingga tidak tersisa data yatim pada daftar favorit.
+
+

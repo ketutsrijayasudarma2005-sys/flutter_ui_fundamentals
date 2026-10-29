@@ -94,6 +94,37 @@ class CourseProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Tahap 8: 48. Jalankan DELETE setelah user menyetujui
+  // 49. Refresh list setelah berhasil
+  // 51. Jika course yang dihapus ada di favorites, hapus juga dari favorites agar tidak tersisa data yatim
+  Future<void> deleteCourse(int id, {String? code}) async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+    try {
+      if (code != null) {
+        favorites.remove(code);
+      }
+      final courseToRemove = courses.cast<Course?>().firstWhere(
+            (c) => c?.id == id,
+            orElse: () => null,
+          );
+      if (courseToRemove != null) {
+        favorites.remove(courseToRemove.code);
+      }
+
+      await repository.deleteCourse(id);
+      await loadCourses();
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }
 
 typedef CourseState = CourseProvider;
