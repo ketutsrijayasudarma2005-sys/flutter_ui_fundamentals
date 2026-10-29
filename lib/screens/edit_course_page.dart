@@ -127,7 +127,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
                 child: Column(
                   children: const [
                     Text(
-                      'Tahap 7 — HTTP PUT/PATCH: Memperbarui Resource',
+                      'Tahap 14 — UPDATE: Mengubah Data di Database',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,

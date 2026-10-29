@@ -25,15 +25,8 @@ void main() {
       expect(service, isA<CourseDataSource>());
     });
 
-    test('71b. Method updateCourse dan deleteCourse sementara melempar UnimplementedError', () {
+    test('71b. Method deleteCourse sementara melempar UnimplementedError', () {
       final service = CourseSupabaseService();
-      const sampleCourse = Course(
-        code: 'MOB01',
-        title: 'Git & GitHub',
-        credits: 2,
-      );
-
-      expect(() => service.updateCourse(1, sampleCourse), throwsA(isA<UnimplementedError>()));
       expect(() => service.deleteCourse(1), throwsA(isA<UnimplementedError>()));
     });
 

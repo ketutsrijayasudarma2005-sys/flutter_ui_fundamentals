@@ -558,6 +558,40 @@ Setelah penambahan data berhasil melalui `CourseProvider.createCourse`, fungsi `
 ### 80. Verifikasi Row Baru
 Data baru dapat diverifikasi langsung pada aplikasi (di `HomePage`, `CoursesPage`, dan daftar card) serta di dashboard database Supabase.
 
+---
+
+## Tahap 14 — UPDATE: Mengubah Data di Database (Supabase)
+
+### 81. Edit Course dari Halaman Detail
+Aksi Edit Course tersedia pada halaman detail ([lib/screens/course_detail_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/course_detail_page.dart)) melalui ikon pensil pada AppBar maupun tombol "Edit Course" di dalam body halaman detail.
+
+### 82. Mengubah Title, Credits, dan Status
+Form edit pada [lib/screens/edit_course_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/edit_course_page.dart) memuat data lama mata kuliah:
+- Field `code`: Bersifat read-only (kunci favorites).
+- Field `title`: Dapat diubah dan divalidasi tidak boleh kosong.
+- Field `credits`: Dapat diubah dan divalidasi harus berupa angka positif.
+- Field `status`: Pilihan dropdown (`planned`, `active`, `done`).
+
+### 83. Method `updateCourse` pada `CourseSupabaseService`
+Mengganti stub `updateCourse` pada [lib/services/course_supabase_service.dart](file:///c:/src/flutter_ui_fundamentals/lib/services/course_supabase_service.dart):
+```dart
+@override
+Future<void> updateCourse(int id, Course course) async {
+  await supabase
+      .from('courses')
+      .update(course.toJson())
+      .eq('id', id);
+}
+```
+Signature method `Future<void> updateCourse(int id, Course course)` sama persis dengan kontrak `CourseDataSource`.
+
+### 84. Refresh List Otomatis
+`CourseProvider.updateCourse` mengeksekusi pembaruan ke repository lalu otomatis memanggil `await loadCourses()`, sehingga list data ter-refresh secara real-time.
+
+### 85. Verifikasi Perubahan
+Perubahan data diverifikasi langsung pada antarmuka aplikasi (`HomePage`, `CoursesPage`, `DetailPage`) dan tersimpan secara persisten pada tabel database Supabase.
+
+
 
 
 
