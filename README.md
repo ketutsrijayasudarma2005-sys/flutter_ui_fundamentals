@@ -620,6 +620,58 @@ Setelah penghapusan berhasil melalui `CourseProvider.deleteCourse(id)`, pemanggi
 - **Aplikasi:** Data yang dihapus tidak lagi tampil pada `HomePage`, `CoursesPage`, dan `FavoritesPage`. SnackBar "Course berhasil dihapus!" ditampilkan kepada pengguna.
 - **Database Supabase:** Baris data dengan `id` terkait terhapus secara permanen dari tabel `courses`.
 
+---
+
+## Tahap 16 — Mini Project Integrasi: Course Data Manager
+
+### 90. Pemisahan Layer: Provider Bebas dari Detail HTTP/Supabase
+Pada [lib/providers/course_provider.dart](file:///c:/src/flutter_ui_fundamentals/lib/providers/course_provider.dart), `CourseProvider` hanya bergantung pada abstraksi `CourseRepository` dan model `Course`. Tidak ada import langsung package `http` maupun `supabase_flutter`. Hal ini menjamin prinsip *Clean Architecture* dan kemudahan pengujian (*testability*).
+
+### 91. Screen Bebas dari Query Database Langsung
+Seluruh screen ([lib/screens/course_list_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/course_list_page.dart), [lib/screens/course_form_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/course_form_page.dart), [lib/screens/course_detail_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/course_detail_page.dart), [lib/screens/favorites_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/favorites_page.dart)) berkomunikasi secara eksklusif melalui `CourseProvider` menggunakan `context.watch<CourseProvider>()` dan `context.read<CourseProvider>()`. Tidak ada pemanggilan langsung ke SQL atau Supabase Client dari sisi UI.
+
+### 92. Pemilihan Data Source Aktif Hanya di `main.dart`
+Pergantian sumber data (antara REST API dan Database Supabase) dapat dilakukan hanya dengan mengubah satu baris deklarasi `CourseDataSource` pada [lib/main.dart](file:///c:/src/flutter_ui_fundamentals/lib/main.dart):
+```dart
+// lib/main.dart — data source aktif: Supabase
+// (untuk REST: CourseApiService(apiBaseUrl))
+final CourseDataSource dataSource = CourseSupabaseService();
+final repository = CourseRepository(dataSource);
+
+runApp(
+  ChangeNotifierProvider(
+    create: (_) => CourseProvider(repository)..loadCourses(),
+    child: const MyApp(),
+  ),
+);
+```
+
+### 93. Penggunaan Kembali Service Layer Melalui Kontrak `CourseDataSource`
+`CourseApiService` (hasil Tahap 2–9) dan `CourseSupabaseService` (hasil Tahap 12–15) keduanya mengimplementasikan kontrak `CourseDataSource`. Keduanya dapat saling menggantikan tanpa memengaruhi layer repository, provider, maupun UI screen.
+
+### 94. Pengujian Seluruh Operasi CRUD (Create, Read, Update, Delete)
+Operasi CRUD telah teruji dan terintegrasi secara menyeluruh:
+1. **Read/SELECT:** Data dimuat dari tabel `courses` menggunakan query `supabase.from('courses').select().order('id')` dan ditampilkan pada `CourseListPage`.
+2. **Create/INSERT:** Form input pada `CourseFormPage` memvalidasi input (`code`, `title`, `credits`, `status`) dan mengirimkan data baru ke database melalui `provider.createCourse`.
+3. **Edit/UPDATE:** Form edit pada `CourseFormPage` memuat data lama dengan `code` bertipe read-only, lalu memperbarui data di database melalui `provider.updateCourse`.
+4. **Delete dengan Konfirmasi:** Terdapat dialog konfirmasi `AlertDialog` sebelum eksekusi `provider.deleteCourse(id)`, dengan penghapusan otomatis dari daftar `favorites` agar tidak meninggalkan data yatim.
+
+### 95. Penanganan State Asynchronous & Uji Error State
+Aplikasi menangani 4 kemungkinan state UI:
+- **Loading State:** Menampilkan indikator loading saat memuat data atau memproses simpan/hapus.
+- **Empty State:** Menampilkan tampilan informatif saat belum ada course di database beserta tombol ajakan tambah course.
+- **Error State & Retry:** Menampilkan komponen [lib/widgets/error_view.dart](file:///c:/src/flutter_ui_fundamentals/lib/widgets/error_view.dart) lengkap dengan pesan kesalahan dan tombol "Coba Lagi" (`loadCourses()`).
+- **Feedback SnackBar:** Menampilkan notifikasi visual pada setiap aksi sukses maupun gagal.
+
+### Fitur Tambahan & Responsivitas
+- **Responsive Shell ([lib/screens/responsive_shell.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/responsive_shell.dart)):** Menyesuaikan navigasi secara otomatis: `NavigationBar` pada ponsel (< 840px) dan `NavigationRail` pada layar lebar (>= 840px).
+- **Konsistensi Favorites:** Menggunakan `code` sebagai kunci unik dan tetap sinkron di berbagai screen bahkan setelah pemanggilan refresh database.
+- **Identitas Mahasiswa:**
+  - **Nama:** I Ketut Srijaya Sudarma
+  - **NIM:** 2415051063
+  - **Kelas:** PTI 5A
+
+
 
 
 

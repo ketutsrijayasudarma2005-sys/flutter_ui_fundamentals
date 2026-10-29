@@ -8,6 +8,7 @@ import '../services/course_supabase_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/summary_card.dart';
 import 'add_course_page.dart';
+import 'course_list_page.dart';
 
 class HomePage extends StatefulWidget {
   final ValueChanged<Course> onCourseTap;
@@ -489,7 +490,9 @@ class _HomePageState extends State<HomePage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  Row(
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
                     children: [
                       // Credits Badge
                       Container(
@@ -509,7 +512,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
                       // Status Badge
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -1033,6 +1035,89 @@ class _HomePageState extends State<HomePage> {
 
           // Tahap 12 – Database Supabase (SELECT) Card
           _buildTahap12SupabaseCard(courseState),
+          const SizedBox(height: 16),
+
+          // Tahap 16 – Mini Project: Course Data Manager Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFBFDBFE), width: 1.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.dataset_outlined,
+                      color: Color(0xFF1D4ED8),
+                      size: 26,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Tahap 16 — Course Data Manager',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E40AF),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Integrasi CRUD Supabase, State Management, & Arsitektur Bersih',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: SizedBox(
+                    width: 260,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                CourseListPage(onCourseTap: widget.onCourseTap),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.open_in_new, size: 18),
+                      label: const Text(
+                        'Buka Course Data Manager',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1D4ED8),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
 
           // Summary Cards: Courses & Favorites

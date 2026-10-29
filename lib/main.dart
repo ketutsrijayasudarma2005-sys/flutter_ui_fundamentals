@@ -7,11 +7,14 @@ import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/add_course_page.dart';
 import 'screens/course_detail_page.dart';
-import 'screens/edit_course_page.dart';
+import 'screens/course_form_page.dart';
+import 'screens/course_list_page.dart';
 import 'screens/courses_page.dart';
+import 'screens/edit_course_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/home_page.dart';
 import 'screens/profile_page.dart';
+import 'screens/responsive_shell.dart';
 import 'services/course_api_service.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
@@ -19,6 +22,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
 
 export 'constants.dart';
+export 'screens/course_form_page.dart';
+export 'screens/course_list_page.dart';
+export 'screens/responsive_shell.dart';
 export 'services/course_api_service.dart';
 export 'services/course_data_source.dart';
 export 'services/course_supabase_service.dart';
@@ -31,15 +37,20 @@ Future<List<Course>> fetchCourses([String url = apiUrl]) =>
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
-    url: SupabaseConfig.normalizedUrl,
-    publishableKey: SupabaseConfig.supabaseAnonKey,
-  );
+  try {
+    await Supabase.initialize(
+      url: SupabaseConfig.normalizedUrl,
+      publishableKey: SupabaseConfig.supabaseAnonKey,
+    );
+  } catch (_) {
+    // Fallback jika sudah terinisialisasi
+  }
 
-  // 55 & 74. Rakit service -> repository -> provider (CourseSupabaseService untuk database)
-  final repository = CourseRepository(
-    CourseSupabaseService(),
-  );
+  // 92. Pilih data source aktif hanya di main.dart:
+  // lib/main.dart — data source aktif: Supabase
+  // (untuk REST: CourseApiService(apiBaseUrl))
+  final CourseDataSource dataSource = CourseSupabaseService();
+  final repository = CourseRepository(dataSource);
 
   runApp(
     ChangeNotifierProvider<CourseProvider>(
@@ -131,6 +142,18 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: const Text('Course Explorer v2'),
         actions: [
+          IconButton(
+            tooltip: 'Course Data Manager',
+            icon: const Icon(Icons.dataset_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CourseListPage(onCourseTap: openDetail),
+                ),
+              );
+            },
+          ),
           Consumer<CourseProvider>(
             builder: (context, state, _) {
               return IconButton(
