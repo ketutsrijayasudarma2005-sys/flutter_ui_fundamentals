@@ -12,4 +12,9 @@ class CourseRepository {
     }
     return service.getCourses();
   }
+
+  // Tahap 6: 36. Kirim data dengan POST melalui CourseApiService -> CourseRepository -> CourseProvider
+  Future<Course> createCourse(Course course) {
+    return service.createCourse(course);
+  }
 }

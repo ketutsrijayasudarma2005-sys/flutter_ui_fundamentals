@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'constants.dart';
 import 'models/course.dart';
 import 'providers/course_provider.dart';
+import 'screens/add_course_page.dart';
 import 'screens/course_detail_page.dart';
 import 'screens/courses_page.dart';
 import 'screens/favorites_page.dart';
@@ -192,6 +193,20 @@ class _MainPageState extends State<MainPage> {
           ],
         ),
       ),
+      floatingActionButton: selectedIndex == 1
+          ? FloatingActionButton.extended(
+              heroTag: 'add_course_fab',
+              tooltip: 'Tambah Course',
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah Course'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddCoursePage()),
+                );
+              },
+            )
+          : null,
       bottomNavigationBar: isExpanded
           ? null
           : NavigationBar(

@@ -6,6 +6,7 @@ import '../providers/course_provider.dart';
 import '../services/course_api_service.dart';
 import '../widgets/course_card.dart';
 import '../widgets/summary_card.dart';
+import 'add_course_page.dart';
 
 class HomePage extends StatefulWidget {
   final ValueChanged<Course> onCourseTap;
@@ -581,6 +582,37 @@ class _HomePageState extends State<HomePage> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(
                             color: Color(0xFFEF9A9A), width: 1.2),
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: SizedBox(
+                    width: 260,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const AddCoursePage()),
+                        );
+                      },
+                      icon: const Icon(Icons.add_circle_outline,
+                          size: 18, color: Color(0xFF1976D2)),
+                      label: const Text(
+                        'Uji POST (Tambah Course)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Color(0xFF1976D2),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                            color: Color(0xFF90CAF9), width: 1.2),
                         shape: const StadiumBorder(),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),

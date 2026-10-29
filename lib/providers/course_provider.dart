@@ -14,6 +14,7 @@ class CourseProvider extends ChangeNotifier {
 
   List<Course> courses = [];
   bool isLoading = false;
+  bool isSaving = false;
   String? error;
   final Set<String> favorites = {};
 
@@ -49,6 +50,27 @@ class CourseProvider extends ChangeNotifier {
       error = e.toString();
     } finally {
       isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // 36. Kirim data POST melalui CourseApiService -> CourseRepository -> CourseProvider
+  // 37. Mengelola state isSaving untuk mencegah submit ganda
+  // 40. Refresh list setelah berhasil dengan memanggil loadCourses() (ganti isi list, bukan menambah)
+  Future<Course> createCourse(Course course) async {
+    isSaving = true;
+    error = null;
+    notifyListeners();
+    try {
+      final created = await repository.createCourse(course);
+      await loadCourses();
+      return created;
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      isSaving = false;
       notifyListeners();
     }
   }

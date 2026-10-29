@@ -281,3 +281,45 @@ Pemanggilan dipastikan tidak pernah diletakkan di dalam fungsi `build()` agar ti
 ### 33. Kembalikan Endpoint Benar dan Refresh
 - **Aksi:** Endpoint dikembalikan ke URL valid (`https://course-api-pearl.vercel.app/courses`) dan tombol `Coba Lagi` ditekan.
 - **Hasil:** UI segera bertransisi dari Error State ke Loading State (`CircularProgressIndicator`), lalu masuk ke **Success State** dengan menampilkan seluruh card course secara responsif.
+
+---
+
+## Tahap 6 — HTTP POST: Membuat Resource Baru
+
+Menambahkan fitur pembuatan resource data course baru menggunakan HTTP POST dengan arsitektur berlapis:
+`Presentation (Screen/Form) -> State/Controller (Provider) -> Repository -> Service/Data Source -> Backend`.
+
+### 34. Pembuatan Form Tambah Course
+File baru [lib/screens/add_course_page.dart](file:///c:/src/flutter_ui_fundamentals/lib/screens/add_course_page.dart) dibuat dengan field input:
+- `code`: Kode mata kuliah (TextFormField).
+- `title`: Judul mata kuliah (TextFormField).
+- `credits`: Jumlah SKS (TextFormField bertipe angka).
+- `status`: Pilihan status mata kuliah (`planned`, `active`, `done`) menggunakan `DropdownButtonFormField`.
+
+### 35. Validasi Form
+- Validasi wajib diisi untuk seluruh field utama (`code`, `title`, `credits`, `status`).
+- Validasi `credits` memastikan nilai yang dimasukkan berupa angka positif (`int.tryParse(value) != null && parsed > 0`).
+
+### 36. Pengiriman Data Melalui Service Layer dan Provider
+Alur data mengikuti arsitektur:
+1. `CourseApiService.createCourse(Course course)` melakukan `http.post` ke endpoint `$baseUrl/courses` dengan header `Content-Type: application/json` dan body `jsonEncode(course.toJson())`.
+2. `CourseRepository.createCourse(Course course)` mendelegasikan request ke `CourseApiService`.
+3. `CourseProvider.createCourse(Course course)` memanggil repository dan mengelola state asynchronous.
+4. Screen tidak pernah mengimpor atau memanggil package `http` secara langsung.
+
+### 37. Pencegahan Submit Ganda (Flag `isSaving`)
+- Flag `isSaving` aktif selama request berlangsung.
+- Tombol `Simpan Course` dinonaktifkan (`onPressed: _isSaving ? null : _submit`) dan menampilkan `CircularProgressIndicator` untuk mencegah duplicate submission atau data ganda.
+
+### 38. Feedback Pengguna Melalui SnackBar
+- Menampilkan `SnackBar` hijau bertuliskan `Course berhasil ditambahkan!` jika request berhasil.
+- Menampilkan `SnackBar` merah dengan detail pesan kegagalan jika terjadi error.
+
+### 39. Pemeriksaan `context.mounted`
+Sebelum memanggil `ScaffoldMessenger` atau `Navigator.pop(context)` setelah operasi `await`, dilakukan pemeriksaan keamanan:
+```dart
+if (!context.mounted) return;
+```
+
+### 40. Refresh List Otomatis
+Setelah penambahan data berhasil, `CourseProvider` otomatis memanggil `await loadCourses()` untuk memperbarui seluruh daftar course dari backend (mengganti isi list, bukan sekadar append lokal).

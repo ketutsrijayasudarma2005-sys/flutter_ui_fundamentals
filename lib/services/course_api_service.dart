@@ -31,4 +31,24 @@ class CourseApiService {
         .map((e) => Course.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  // Tahap 6: HTTP POST: Membuat Resource Baru
+  Future<Course> createCourse(Course course) async {
+    final endpoint = baseUrl.endsWith('/courses')
+        ? baseUrl
+        : '$baseUrl/courses';
+    final response = await http.post(
+      Uri.parse(endpoint),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(course.toJson()),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Course.fromJson(
+        jsonDecode(response.body) as Map<String, dynamic>,
+      );
+    }
+
+    throw Exception('Gagal membuat course');
+  }
 }
